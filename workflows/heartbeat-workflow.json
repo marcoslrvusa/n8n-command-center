@@ -1,0 +1,70 @@
+{
+  "name": "[CC] Heartbeat — Saúde da instância N8N",
+  "nodes": [
+    {
+      "id": "schedule-heartbeat",
+      "name": "A cada 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+        }
+      }
+    },
+    {
+      "id": "health-check",
+      "name": "Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.N8N_URL || 'https://n8n.fvmarketing.com.br' }}/healthz",
+        "authentication": "none",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "code-heartbeat",
+      "name": "Montar Heartbeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "jsCode": "const healthData = $input.first().json;\nconst startTime = $node['Health Check'].context.startTime || Date.now();\nconst responseTime = Date.now() - startTime;\n\nreturn [{\n  json: {\n    is_alive: true,\n    n8n_version: healthData?.version || healthData?.n8nVersion || null,\n    api_response_ms: responseTime,\n    details: healthData || {}\n  }\n}];"
+      }
+    },
+    {
+      "id": "supabase-heartbeat",
+      "name": "Inserir no Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [950, 300],
+      "parameters": {
+        "operation": "create",
+        "tableId": "n8n_heartbeat",
+        "returnFields": "id,checked_at"
+      },
+      "credentials": {
+        "supabaseApi": "Command Center Supabase"
+      }
+    }
+  ],
+  "connections": {
+    "A cada 5 min": { "main": [[ { "node": "Health Check", "type": "main", "index": 0 } ]] },
+    "Health Check": { "main": [[ { "node": "Montar Heartbeat", "type": "main", "index": 0 } ]] },
+    "Montar Heartbeat": { "main": [[ { "node": "Inserir no Supabase", "type": "main", "index": 0 } ]] }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["command-center", "heartbeat"]
+}

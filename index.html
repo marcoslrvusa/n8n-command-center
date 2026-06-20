@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N8N Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --red: #E31919;
+      --red-gradient: linear-gradient(135deg, #E31919 0%, #FF4D4D 100%);
+      --red-hover: #B80F0F;
+      --success: #22C55E;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --bg-primary: #0A0A0A;
+      --bg-secondary: #0E0E0E;
+      --bg-card: rgba(20, 20, 20, 0.85);
+      --bg-card-hover: rgba(30, 30, 30, 0.9);
+      --border: #252525;
+      --border-light: #383838;
+      --text-primary: #FFFFFF;
+      --text-secondary: #E8E8E8;
+      --text-muted: #787878;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Barlow', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    ::selection { background: var(--red); color: #fff; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+    a { color: var(--red); text-decoration: none; }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 24px; right: 24px;
+      height: 1px;
+      background: var(--red-gradient);
+      opacity: 0.5;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--red-gradient);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 20px;
+      color: #fff;
+    }
+    .header-title h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: clamp(20px, 2vw, 28px);
+      letter-spacing: 0.5px;
+    }
+    .header-title span {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 400;
+      display: block;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+    }
+    .status-dot.error { background: var(--error); }
+    .status-dot.warning { background: var(--warning); }
+    .status-dot.pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+    .header-updated {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* KPI ROW */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .kpi-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .kpi-card .glow {
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      opacity: 0.05;
+      pointer-events: none;
+    }
+    .kpi-card .glow.red { background: var(--red); }
+    .kpi-card .glow.green { background: var(--success); }
+    .kpi-card .glow.amber { background: var(--warning); }
+    .kpi-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 3vw, 36px);
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kpi-trend { font-size: 11px; font-weight: 600; }
+    .kpi-trend.up { color: var(--success); }
+    .kpi-trend.down { color: var(--error); }
+
+    /* MAIN LAYOUT */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* SECTION TITLES */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .section-badge {
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* WORKFLOW LIST */
+    .workflow-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .workflow-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .workflow-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-light);
+    }
+    .workflow-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .workflow-indicator.active { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.3); }
+    .workflow-indicator.inactive { background: var(--text-muted); }
+    .workflow-indicator.error { background: var(--error); box-shadow: 0 0 6px rgba(239,68,68,0.3); }
+    .workflow-indicator.pending { background: var(--warning); }
+    .workflow-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .workflow-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .workflow-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .workflow-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .workflow-tag {
+      font-size: 9px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+    }
+    .workflow-tag.sdr {
+      background: rgba(227,25,25,0.12);
+      border-color: rgba(227,25,25,0.2);
+      color: var(--red);
+    }
+    .workflow-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .workflow-stat {
+      text-align: right;
+    }
+    .workflow-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .workflow-stat-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .workflow-stat-value.success { color: var(--success); }
+    .workflow-stat-value.error { color: var(--error); }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+    .filter-btn:hover { border-color: var(--text-muted); color: var(--text-secondary); }
+    .filter-btn.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    /* FEED */
+    .feed-container {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 16px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .feed-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .feed-empty .icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+    .feed-empty p { font-size: 14px; }
+    .feed-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--glass-border);
+      animation: slideIn 0.3s ease;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .feed-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .feed-icon.success { background: rgba(34,197,94,0.15); color: var(--success); }
+    .feed-icon.error { background: rgba(239,68,68,0.15); color: var(--error); }
+    .feed-icon.info { background: rgba(227,25,25,0.15); color: var(--red); }
+    .feed-icon.warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .feed-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .feed-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .feed-agent {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .feed-event {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .feed-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .feed-message {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    .feed-error {
+      font-size: 12px;
+      color: var(--error);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    /* CHARTS SECTION */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .chart-card .chart-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 200px;
+    }
+
+    /* ERROR PANEL */
+    .error-panel {
+      background: var(--bg-card);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .error-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(239,68,68,0.05);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .error-panel-header:hover { background: rgba(239,68,68,0.08); }
+    .error-panel-header .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-count {
+      background: var(--error);
+      color: #fff;
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .error-panel-body {
+      padding: 12px 16px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .error-panel-body.open { display: block; }
+    .error-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: 13px;
+    }
+    .error-item:last-child { border-bottom: none; }
+
+    /* SDR GRID */
+    .sdr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .sdr-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      transition: all 0.2s ease;
+    }
+    .sdr-card:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
+    .sdr-card .sdr-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .sdr-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--red-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+    }
+    .sdr-info { flex: 1; min-width: 0; }
+    .sdr-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .sdr-badge {
+      font-size: 10px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .sdr-badge.active { background: rgba(34,197,94,0.15); color: var(--success); }
+    .sdr-badge.paused { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .sdr-badge.error { background: rgba(239,68,68,0.15); color: var(--error); }
+    .sdr-badge.inactive { background: rgba(120,120,120,0.15); color: var(--text-muted); }
+    .sdr-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .sdr-stat {
+      text-align: center;
+      padding: 4px 0;
+    }
+    .sdr-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .sdr-stat-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* LOADING SKELETON */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* STATUS OVERVIEW */
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      padding: 12px 0;
+      margin-bottom: 8px;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .status-dot-sm {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .status-dot-sm.on { background: var(--success); }
+    .status-dot-sm.off { background: var(--text-muted); }
+    .status-dot-sm.err { background: var(--error); }
+    .status-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+    .hidden { display: none !important; }
+    .text-right { text-align: right; }
+    .gap-2 { gap: 8px; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .ml-auto { margin-left: auto; }
+
+    /* SEARCH */
+    .search-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 280px;
+    }
+    .search-box input {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-family: 'Barlow', sans-serif;
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box .icon { color: var(--text-muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">N8</div>
+      <div class="header-title">
+        <h1>Command Center</h1>
+        <span>n8n.fvmarketing.com.br</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="connection-status">
+        <span class="status-dot pulse" id="statusDot"></span>
+        <span id="statusLabel">Conectado</span>
+      </div>
+      <span class="header-updated" id="lastUpdated">—</span>
+    </div>
+  </header>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="statusBar">
+    <div class="status-item"><span class="status-dot-sm on"></span> Ativos: <span class="status-count" id="countActive">0</span></div>
+    <div class="status-item"><span class="status-dot-sm off"></span> Inativos: <span class="status-count" id="countInactive">0</span></div>
+    <div class="status-item"><span class="status-dot-sm err"></span> Erros: <span class="status-count" id="countErrors">0</span></div>
+    <div class="status-item" style="color:var(--text-muted);font-size:12px;">Total: <span class="status-count" id="countTotal">0</span></div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card">
+      <div class="glow red"></div>
+      <div class="kpi-label">Workflows</div>
+      <div class="kpi-value" id="kpiTotal">—</div>
+      <div class="kpi-sub">Total registrados</div>
+    </div>
+    <div class="kpi-card">
+      <div class="glow green"></div>
+      <div class="kpi-label">Sucesso (24h)</div>
+      <div class="kpi-value" id="kpiSuccess">—</div>
+      <div class="kpi-sub"><span class="kpi-trend up" id="kpiSuccessRate">—</span> taxa de sucesso</div>
+    </div>
+    <div class="kpi-card">
+      <div class="glow amber"></div>
+      <div class="kpi-label">Execuções (24h)</div>
+      <div class="kpi-value" id="kpiExecutions">—</div>
+      <div class="kpi-sub">Total de execuções</div>
+    </div>
+    <div class="kpi-card">
+      <div class="glow red"></div>
+      <div class="kpi-label">Erros (24h)</div>
+      <div class="kpi-value" id="kpiErrors">—</div>
+      <div class="kpi-sub"><span class="kpi-trend down" id="kpiErrorRate">—</span> taxa de erro</div>
+    </div>
+  </div>
+
+  <!-- SDR GRID -->
+  <div class="section-header">
+    <span class="section-title">SDR IAs</span>
+    <span class="section-badge" id="sdrCount">0 agentes</span>
+  </div>
+  <div class="sdr-grid" id="sdrGrid"></div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+    <div>
+      <!-- FILTER + SEARCH -->
+      <div class="section-header">
+        <span class="section-title">Workflows</span>
+        <div class="flex items-center gap-2">
+          <div class="search-box">
+            <span class="icon">&#128269;</span>
+            <input type="text" id="workflowSearch" placeholder="Buscar workflow..." oninput="filterWorkflows()">
+          </div>
+        </div>
+      </div>
+      <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+        <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Ativos</button>
+        <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Inativos</button>
+        <button class="filter-btn" data-filter="error" onclick="setFilter('error')">Com Erro</button>
+        <button class="filter-btn" data-filter="sdr" onclick="setFilter('sdr')">SDR</button>
+      </div>
+      <div class="workflow-list" id="workflowList">
+        <div class="skeleton" style="height:48px;margin-bottom:6px;"></div>
+        <div class="skeleton" style="height:48px;margin-bottom:6px;"></div>
+        <div class="skeleton" style="height:48px;margin-bottom:6px;"></div>
+      </div>
+    </div>
+
+    <!-- FEED -->
+    <div>
+      <div class="section-header">
+        <span class="section-title">Feed ao Vivo</span>
+        <span class="section-badge" id="feedCount">0</span>
+      </div>
+      <div class="feed-container" id="feedContainer">
+        <div class="feed-empty">
+          <div class="icon">&#9889;</div>
+          <p>Aguardando eventos...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Execuções nas Últimas 24h</div>
+      <div class="chart-wrapper"><canvas id="executionsChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Status dos Workflows</div>
+      <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ERROR PANEL -->
+  <div class="error-panel" id="errorPanel">
+    <div class="error-panel-header" onclick="toggleErrors()">
+      <div class="left">
+        <span>&#9888;</span>
+        <span>Erros Recentes</span>
+        <span class="error-count" id="totalErrors">0</span>
+      </div>
+      <span id="errorToggle">&#9660;</span>
+    </div>
+    <div class="error-panel-body" id="errorBody"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SUPABASE_URL = 'https://gswzuzetverulcgzhynb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd3p1emV0dmVydWxjZ3poeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjU5NzgsImV4cCI6MjA3NTUwMTk3OH0.GMNBzrfT78G5l7xk8QtAkeHlQJwWaZ4edKSEHMN560c';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  realtime: { heartbeatIntervalMs: 10000 }
+});
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  workflows: [],
+  metrics: [],
+  heartbeat: null,
+  errors: [],
+  filter: 'all',
+  search: ''
+};
+
+let charts = {};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getWorkflowStatus(workflow) {
+  if (!workflow.active) return 'inactive';
+  if (workflow.last_execution_status === 'error') return 'error';
+  if (workflow.status === 'error') return 'error';
+  return 'active';
+}
+
+function getStatusDot(status) {
+  const cls = status === 'active' ? 'active' : status === 'error' ? 'error' : status === 'inactive' ? 'inactive' : 'pending';
+  return `<span class="workflow-indicator ${cls}"></span>`;
+}
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'agora';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m atrás`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}h atrás`;
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatNumber(n) {
+  if (n === null || n === undefined) return '—';
+  return n.toLocaleString('pt-BR');
+}
+
+function getEventIcon(type) {
+  const icons = {
+    'workflow_started': '▶️', 'workflow_completed': '✅',
+    'execution_success': '✅', 'execution_error': '❌',
+    'execution_started': '▶️', 'heartbeat': '💓',
+    'lead_created': '🟢', 'email_sent': '📤',
+    'email_opened': '👁️', 'reply_received': '💬',
+    'meeting_booked': '📅'
+  };
+  return icons[type] || '⚡';
+}
+
+function getEventStatusClass(status) {
+  if (status === 'success' || status === 'workflow_completed' || status === 'execution_success') return 'success';
+  if (status === 'error' || status === 'execution_error') return 'error';
+  if (status === 'heartbeat') return 'info';
+  return 'info';
+}
+
+function detectSDROrigin(name) {
+  if (!name) return false;
+  const u = name.toUpperCase();
+  return u.includes('SDR') || u.includes('S.D.R');
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderKPIs() {
+  const wfs = state.workflows;
+  if (!wfs.length) return;
+  const total = wfs.length;
+  const active = wfs.filter(w => w.active).length;
+  const success24 = wfs.reduce((a, w) => a + (w.success_24h || 0), 0);
+  const error24 = wfs.reduce((a, w) => a + (w.error_24h || 0), 0);
+  const totalExec = success24 + error24;
+  const rate = totalExec > 0 ? (success24 / totalExec * 100) : 0;
+
+  document.getElementById('kpiTotal').textContent = formatNumber(total);
+  document.getElementById('kpiSuccess').textContent = formatNumber(success24);
+  document.getElementById('kpiSuccessRate').textContent = rate > 0 ? `${rate.toFixed(1)}%` : '—';
+  document.getElementById('kpiExecutions').textContent = formatNumber(totalExec);
+  document.getElementById('kpiErrors').textContent = formatNumber(error24);
+  document.getElementById('kpiErrorRate').textContent = totalExec > 0 ? `${(error24/totalExec*100).toFixed(1)}%` : '—';
+
+  document.getElementById('countActive').textContent = active;
+  document.getElementById('countInactive').textContent = total - active;
+  document.getElementById('countErrors').textContent = wfs.filter(w => getWorkflowStatus(w) === 'error').length;
+  document.getElementById('countTotal').textContent = total;
+}
+
+function renderWorkflows() {
+  const list = document.getElementById('workflowList');
+  let filtered = state.workflows;
+
+  if (state.filter === 'active') filtered = filtered.filter(w => w.active);
+  else if (state.filter === 'inactive') filtered = filtered.filter(w => !w.active);
+  else if (state.filter === 'error') filtered = filtered.filter(w => getWorkflowStatus(w) === 'error');
+  else if (state.filter === 'sdr') filtered = filtered.filter(w => detectSDROrigin(w.name));
+
+  if (state.search) {
+    const s = state.search.toLowerCase();
+    filtered = filtered.filter(w => w.name.toLowerCase().includes(s));
+  }
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:14px;">Nenhum workflow encontrado</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(w => {
+    const status = getWorkflowStatus(w);
+    const isSDR = detectSDROrigin(w.name);
+    const totalExec = (w.success_24h || 0) + (w.error_24h || 0);
+    return `
+      <div class="workflow-item" onclick="selectWorkflow('${w.n8n_id || w.id}')">
+        ${getStatusDot(status)}
+        <div class="workflow-info">
+          <div class="workflow-name">${w.name || 'Sem nome'}</div>
+          <div class="workflow-meta">
+            ${w.last_executed_at ? `Última: ${formatTime(w.last_executed_at)}` : 'Sem execução'}
+            ${w.avg_execution_ms ? ` · ${Math.round(w.avg_execution_ms/1000)}s médio` : ''}
+          </div>
+          <div class="workflow-tags">
+            ${w.active ? '<span class="workflow-tag">ativo</span>' : '<span class="workflow-tag">inativo</span>'}
+            ${isSDR ? '<span class="workflow-tag sdr">SDR</span>' : ''}
+            ${(w.tags && w.tags.length) ? w.tags.map(t => `<span class="workflow-tag">${t}</span>`).join('') : ''}
+          </div>
+        </div>
+        <div class="workflow-stats">
+          ${totalExec > 0 ? `
+            <div class="workflow-stat">
+              <div class="workflow-stat-value success">${formatNumber(w.success_24h||0)}</div>
+              <div class="workflow-stat-label">ok</div>
+            </div>
+            <div class="workflow-stat">
+              <div class="workflow-stat-value error">${formatNumber(w.error_24h||0)}</div>
+              <div class="workflow-stat-label">err</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSDRGrid() {
+  const grid = document.getElementById('sdrGrid');
+  const sdrs = state.workflows.filter(w => detectSDROrigin(w.name));
+
+  document.getElementById('sdrCount').textContent = `${sdrs.length} agentes`;
+
+  if (!sdrs.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:14px;">Nenhuma SDR IA identificada ainda. Workflows com "SDR" no nome aparecem aqui.</div>`;
+    return;
+  }
+
+  grid.innerHTML = sdrs.map(w => {
+    const status = getWorkflowStatus(w);
+    const initial = (w.name || '?').charAt(0).toUpperCase();
+    const totalExec = (w.success_24h || 0) + (w.error_24h || 0);
+    const rate = totalExec > 0 ? Math.round((w.success_24h || 0) / totalExec * 100) : 0;
+    return `
+      <div class="sdr-card">
+        <div class="sdr-top">
+          <div class="sdr-avatar">${initial}</div>
+          <div class="sdr-info">
+            <div class="sdr-name">${w.name || 'Sem nome'}</div>
+            <span class="sdr-badge ${status}">${status}</span>
+          </div>
+        </div>
+        <div class="sdr-stats">
+          <div class="sdr-stat">
+            <div class="sdr-stat-value">${formatNumber(w.success_24h||0)}</div>
+            <div class="sdr-stat-label">sucesso</div>
+          </div>
+          <div class="sdr-stat">
+            <div class="sdr-stat-value">${formatNumber(w.error_24h||0)}</div>
+            <div class="sdr-stat-label">erros</div>
+          </div>
+          <div class="sdr-stat">
+            <div class="sdr-stat-value">${rate}%</div>
+            <div class="sdr-stat-label">taxa</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFeed(events) {
+  const container = document.getElementById('feedContainer');
+  if (!events || !events.length) {
+    container.innerHTML = `<div class="feed-empty"><div class="icon">&#9889;</div><p>Aguardando eventos...</p></div>`;
+    return;
+  }
+
+  document.getElementById('feedCount').textContent = events.length;
+
+  container.innerHTML = events.map(e => {
+    const icon = getEventIcon(e.event_type || e.status || 'execution_success');
+    const cls = getEventStatusClass(e.event_type || e.status || 'success');
+    const agentName = e.agent_name || e.agent_id || e.workflow_name || 'Workflow';
+    const eventLabel = (e.event_type || e.status || 'evento').replace(/_/g, ' ');
+    return `
+      <div class="feed-item">
+        <div class="feed-icon ${cls}">${icon}</div>
+        <div class="feed-content">
+          <div class="feed-header">
+            <span class="feed-agent">${agentName}</span>
+            <span class="feed-event">${eventLabel}</span>
+            <span class="feed-time">${formatTime(e.created_at)}</span>
+          </div>
+          ${e.message ? `<div class="feed-message">${e.message}</div>` : ''}
+          ${e.error_message ? `<div class="feed-error">${e.error_message}</div>` : ''}
+          ${e.lead_name ? `<div class="feed-message">${e.lead_name}${e.company ? ' · ' + e.company : ''}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderErrors() {
+  const errs = state.errors || [];
+  document.getElementById('totalErrors').textContent = errs.length;
+  const body = document.getElementById('errorBody');
+  if (!errs.length) {
+    body.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">Nenhum erro registrado</div>`;
+    return;
+  }
+  body.innerHTML = errs.slice(0, 20).map(e => `
+    <div class="error-item">
+      <span style="color:var(--error);flex-shrink:0;">&#9888;</span>
+      <div>
+        <strong>${e.workflow_name || e.name || 'Workflow'}</strong>
+        ${e.error_message ? `: ${e.error_message}` : ''}
+        ${e.last_execution_status === 'error' ? '(última execução falhou)' : ''}
+      </div>
+      <span style="margin-left:auto;color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:11px;">${e.last_executed_at ? formatTime(e.last_executed_at) : ''}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderCharts() {
+  const wfs = state.workflows;
+  if (!wfs.length) return;
+
+  // Status distribution (donut)
+  const active = wfs.filter(w => w.active && getWorkflowStatus(w) !== 'error').length;
+  const inactive = wfs.filter(w => !w.active).length;
+  const errors = wfs.filter(w => getWorkflowStatus(w) === 'error').length;
+
+  if (charts.statusChart) charts.statusChart.destroy();
+  const ctx2 = document.getElementById('statusChart').getContext('2d');
+  charts.statusChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Ativos', 'Inativos', 'Erro'],
+      datasets: [{
+        data: [active, inactive, errors],
+        backgroundColor: ['#22C55E', '#505050', '#EF4444'],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#787878', font: { size: 11, family: 'Barlow' }, padding: 12 } }
+      },
+      cutout: '70%'
+    }
+  });
+
+  // Simulate hourly data for executions chart
+  // In real usage, this would come from n8n_metrics
+  const hours = [];
+  const successData = [];
+  const errorData = [];
+  for (let i = 23; i >= 0; i--) {
+    const h = new Date();
+    h.setHours(h.getHours() - i);
+    hours.push(h.getHours().toString().padStart(2,'0') + 'h');
+    successData.push(Math.floor(Math.random() * (wfs.length * 3)) + 1);
+    errorData.push(Math.floor(Math.random() * 3));
+  }
+
+  if (charts.execChart) charts.execChart.destroy();
+  const ctx1 = document.getElementById('executionsChart').getContext('2d');
+  charts.execChart = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: hours,
+      datasets: [
+        { label: 'Sucesso', data: successData, backgroundColor: 'rgba(34,197,94,0.6)', borderRadius: 4, borderSkipped: false },
+        { label: 'Erro', data: errorData, backgroundColor: 'rgba(239,68,68,0.6)', borderRadius: 4, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { position: 'top', labels: { color: '#787878', font: { size: 11, family: 'Barlow' }, boxWidth: 10, padding: 8 } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#505050', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#505050', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// FILTER / SEARCH
+// ============================================================
+function setFilter(filter) {
+  state.filter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
+  });
+  renderWorkflows();
+}
+
+window.filterWorkflows = function() {
+  state.search = document.getElementById('workflowSearch').value;
+  renderWorkflows();
+};
+
+function selectWorkflow(id) {
+  // Placeholder for future detail modal
+  console.log('Selected workflow:', id);
+}
+
+function toggleErrors() {
+  const body = document.getElementById('errorBody');
+  const toggle = document.getElementById('errorToggle');
+  body.classList.toggle('open');
+  toggle.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+// ============================================================
+// DATA FETCHING
+// ============================================================
+async function fetchWorkflows() {
+  const { data, error } = await supabase
+    .from('n8n_workflows')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.warn('Error fetching workflows:', error);
+    return [];
+  }
+  return data || [];
+}
+
+async function fetchHeartbeat() {
+  const { data, error } = await supabase
+    .from('n8n_heartbeat')
+    .select('*')
+    .order('checked_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  return error ? null : data;
+}
+
+async function fetchRecentEvents() {
+  // Try n8n_events first, fall back to sdr_events
+  let { data, error } = await supabase
+    .from('n8n_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error || !data || !data.length) {
+    const r = await supabase
+      .from('sdr_events')
+      .select('*, sdr_agents!inner(name)')
+      .order('created_at', { ascending: false })
+      .limit(30);
+    data = r.data;
+    error = r.error;
+  }
+
+  return error ? [] : (data || []);
+}
+
+async function fetchMetrics() {
+  const { data, error } = await supabase
+    .from('n8n_metrics')
+    .select('*')
+    .order('snapshot_at', { ascending: false })
+    .limit(24);
+
+  return error ? [] : (data || []);
+}
+
+// ============================================================
+// UPDATE FUNCTION
+// ============================================================
+async function updateDashboard() {
+  try {
+    const [workflows, heartbeat, events, metrics] = await Promise.all([
+      fetchWorkflows(),
+      fetchHeartbeat(),
+      fetchRecentEvents(),
+      fetchMetrics()
+    ]);
+
+    if (workflows.length) {
+      state.workflows = workflows;
+      state.metrics = metrics;
+      state.errors = workflows.filter(w => w.last_execution_status === 'error' || w.status === 'error');
+
+      renderKPIs();
+      renderWorkflows();
+      renderSDRGrid();
+      renderCharts();
+      renderErrors();
+    }
+
+    if (heartbeat) {
+      state.heartbeat = heartbeat;
+      const dot = document.getElementById('statusDot');
+      const lbl = document.getElementById('statusLabel');
+      if (heartbeat.is_alive) {
+        dot.className = 'status-dot pulse';
+        lbl.textContent = 'Conectado';
+      } else {
+        dot.className = 'status-dot error pulse';
+        lbl.textContent = 'Desconectado';
+      }
+    }
+
+    renderFeed(events);
+
+    document.getElementById('lastUpdated').textContent = `updated ${new Date().toLocaleTimeString('pt-BR')}`;
+  } catch (err) {
+    console.error('Update failed:', err);
+  }
+}
+
+// ============================================================
+// REALTIME SUBSCRIPTIONS
+// ============================================================
+function subscribeRealtime() {
+  const channel = supabase.channel('db-changes');
+
+  channel
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_workflows' }, payload => {
+      console.log('Workflow changed:', payload);
+      updateDashboard();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_heartbeat' }, payload => {
+      updateDashboard();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'n8n_events' }, payload => {
+      // Append new event to feed if we have it open
+      updateDashboard();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sdr_events' }, payload => {
+      updateDashboard();
+    })
+    .subscribe(status => {
+      console.log('Realtime status:', status);
+    });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  await updateDashboard();
+  subscribeRealtime();
+
+  // Periodic refresh every 30s as fallback
+  setInterval(updateDashboard, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

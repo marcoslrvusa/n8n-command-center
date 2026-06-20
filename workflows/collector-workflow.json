@@ -1,0 +1,122 @@
+{
+  "name": "[CC] Collector — Sincroniza workflows N8N com Supabase",
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "A cada 2 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 2 }]
+        }
+      }
+    },
+    {
+      "id": "get-workflows",
+      "name": "Listar Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.N8N_URL || 'https://n8n.fvmarketing.com.br' }}/api/v1/workflows?active=true&limit=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{ $env.N8N_API_KEY }}" }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "code-transform",
+      "name": "Transformar Dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "jsCode": "const workflows = $input.all();\nconst now = new Date().toISOString();\n\nreturn workflows.map(w => ({\n  json: {\n    n8n_id: w.id,\n    name: w.name,\n    active: w.active,\n    tags: w.tags || [],\n    status: w.active ? 'active' : 'inactive',\n    updated_at: now\n  }\n}));"
+      }
+    },
+    {
+      "id": "loop-workflows",
+      "name": "Para cada workflow",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [950, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "get-executions",
+      "name": "Execuções (24h)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1150, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.N8N_URL || 'https://n8n.fvmarketing.com.br' }}/api/v1/executions?workflowId={{ $json.n8n_id }}&limit=50&status=all",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{ $env.N8N_API_KEY }}" }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "code-aggregate",
+      "name": "Agregar Métricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1350, 300],
+      "parameters": {
+        "jsCode": "const workflow = $input.first().json;\nconst executions = $('Execuções (24h)').all();\n\nconst now = new Date();\nconst dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n\nconst recent = executions.filter(e => new Date(e.startedAt || e.createdAt) >= dayAgo);\nconst success = recent.filter(e => e.finished && e.status === 'success').length;\nconst errors = recent.filter(e => e.status === 'error' || e.stoppedAt).length;\nconst total = recent.length;\nconst durations = recent.filter(e => e.executionTime).map(e => e.executionTime);\nconst avg = durations.length ? Math.round(durations.reduce((a,b) => a + b, 0) / durations.length) : null;\n\nconst lastExec = recent.length ? recent.sort((a,b) => new Date(b.startedAt || b.createdAt) - new Date(a.startedAt || a.createdAt))[0] : null;\n\nreturn [{\n  json: {\n    n8n_id: workflow.n8n_id,\n    name: workflow.name,\n    active: workflow.active,\n    tags: workflow.tags,\n    status: workflow.status,\n    last_execution_status: lastExec ? lastExec.status : null,\n    last_executed_at: lastExec ? (lastExec.startedAt || lastExec.createdAt) : null,\n    last_execution_id: lastExec ? lastExec.id : null,\n    executions_24h: total,\n    success_24h: success,\n    error_24h: errors,\n    avg_execution_ms: avg ? Math.round(avg) : null,\n    updated_at: now.toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "supabase-upsert",
+      "name": "Upsert Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1550, 300],
+      "parameters": {
+        "operation": "upsert",
+        "tableId": "n8n_workflows",
+        "upsertMatch": "n8n_id",
+        "returnFields": "n8n_id,name,active,updated_at"
+      },
+      "credentials": {
+        "supabaseApi": "Command Center Supabase"
+      }
+    }
+  ],
+  "connections": {
+    "A cada 2 min": { "main": [[ { "node": "Listar Workflows", "type": "main", "index": 0 } ]] },
+    "Listar Workflows": { "main": [[ { "node": "Transformar Dados", "type": "main", "index": 0 } ]] },
+    "Transformar Dados": { "main": [[ { "node": "Para cada workflow", "type": "main", "index": 0 } ]] },
+    "Para cada workflow": { "main": [[ { "node": "Execuções (24h)", "type": "main", "index": 0 } ]] },
+    "Execuções (24h)": { "main": [[ { "node": "Agregar Métricas", "type": "main", "index": 0 } ]] },
+    "Agregar Métricas": { "main": [[ { "node": "Upsert Supabase", "type": "main", "index": 0 } ]] }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["command-center", "collector"]
+}

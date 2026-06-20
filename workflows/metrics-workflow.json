@@ -1,0 +1,75 @@
+{
+  "name": "[CC] Metrics — Snapshot horário de métricas",
+  "nodes": [
+    {
+      "id": "schedule-metrics",
+      "name": "A cada 1h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      }
+    },
+    {
+      "id": "http-workflows",
+      "name": "Listar Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.N8N_URL || 'https://n8n.fvmarketing.com.br' }}/api/v1/workflows?limit=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{ $env.N8N_API_KEY }}" }
+          ]
+        },
+        "options": { "timeout": 20000 }
+      }
+    },
+    {
+      "id": "code-metrics",
+      "name": "Calcular Métricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "jsCode": "const workflows = $input.all();\nconst active = workflows.filter(w => w.active);\nconst total = workflows.length;\n\nconst snapshot = {\n  total_workflows: total,\n  active_workflows: active.length,\n  total_executions_24h: workflows.reduce((a, w) => a + (w.executions_24h || 0), 0),\n  total_success_24h: workflows.reduce((a, w) => a + (w.success_24h || 0), 0),\n  total_error_24h: workflows.reduce((a, w) => a + (w.error_24h || 0), 0),\n  overall_success_rate: null,\n  avg_execution_time_ms: null,\n  snapshot_at: new Date().toISOString()\n};\n\nconst totalExec = snapshot.total_success_24h + snapshot.total_error_24h;\nif (totalExec > 0) {\n  snapshot.overall_success_rate = snapshot.total_success_24h / totalExec;\n}\n\nconst durations = workflows.filter(w => w.avg_execution_ms).map(w => w.avg_execution_ms);\nif (durations.length) {\n  snapshot.avg_execution_time_ms = Math.round(durations.reduce((a,b) => a + b, 0) / durations.length);\n}\n\nreturn [{ json: snapshot }];"
+      }
+    },
+    {
+      "id": "supabase-metrics",
+      "name": "Inserir no Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [950, 300],
+      "parameters": {
+        "operation": "create",
+        "tableId": "n8n_metrics",
+        "returnFields": "id,snapshot_at"
+      },
+      "credentials": {
+        "supabaseApi": "Command Center Supabase"
+      }
+    }
+  ],
+  "connections": {
+    "A cada 1h": { "main": [[ { "node": "Listar Workflows", "type": "main", "index": 0 } ]] },
+    "Listar Workflows": { "main": [[ { "node": "Calcular Métricas", "type": "main", "index": 0 } ]] },
+    "Calcular Métricas": { "main": [[ { "node": "Inserir no Supabase", "type": "main", "index": 0 } ]] }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["command-center", "metrics"]
+}
