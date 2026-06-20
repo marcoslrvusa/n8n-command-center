@@ -158,7 +158,11 @@ body{background:var(--bga);color:var(--c);font-family:'Barlow',sans-serif;font-s
 
 <div class="ct">
 
-  <div id="errBanner"></div>
+  <div id="errBanner" style="display:none">
+    <div id="errMsg"></div>
+    <pre id="errSql" style="display:none;margin-top:8px;padding:8px;background:var(--bga);border-radius:4px;font-size:10px;overflow-x:auto;max-height:200px;color:var(--c2);font-family:monospace;white-space:pre-wrap;word-break:break-all"></pre>
+    <button id="errToggle" style="display:none;margin-top:6px;background:none;border:1px solid var(--bd);border-radius:3px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--c)">Mostrar SQL</button>
+  </div>
 
   <div class="kp">
     <div class="kpc"><div class="l">Workflows</div><div class="v" id="kpTot">—</div><div class="s">Total registrados</div></div>
@@ -270,10 +274,21 @@ async function apiPost(tabela, dados) {
   if (!r.ok) { const txt = await r.text(); throw new Error(tabela + ': ' + r.status + ' ' + txt.substring(0, 100)); }
 }
 
-function mostrarErro(msg) {
+function mostrarErro(msg, sql) {
   const el = document.getElementById('errBanner');
-  el.textContent = '⚠ ' + msg;
+  document.getElementById('errMsg').textContent = '⚠ ' + msg;
   el.style.display = 'block';
+  if (sql) {
+    document.getElementById('errSql').textContent = sql;
+    document.getElementById('errSql').style.display = 'none';
+    const btn = document.getElementById('errToggle');
+    btn.style.display = 'inline-block';
+    btn.onclick = function() {
+      const s = document.getElementById('errSql');
+      s.style.display = s.style.display === 'none' ? 'block' : 'none';
+      btn.textContent = s.style.display === 'block' ? 'Esconder SQL' : 'Mostrar SQL';
+    };
+  }
   erroExibido = true;
 }
 
@@ -288,8 +303,16 @@ async function carregar() {
     W = wf || []; R = rp || []; H = hb?.[0] || null;
     document.getElementById('errBanner').style.display = 'none';
     erroExibido = false;
-  } catch (e) {
-    if (!erroExibido) mostrarErro('Erro ao carregar dados: ' + e.message + '. Verifique se rodou o SQL no Supabase.');
+    } catch (e) {
+    const msg = e.message || '';
+    if (msg.includes('404') || msg.includes('Could not find the table')) {
+      if (!erroExibido) mostrarErro(
+        'Tabelas não existem no Supabase. Copie o SQL abaixo, abra https://app.supabase.com/project/gswzuzetverulcgzhynb/sql/new , cole tudo e clique em Run.',
+        'CREATE TABLE IF NOT EXISTS n8n_workflows (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  n8n_id TEXT UNIQUE NOT NULL,\n  name TEXT NOT NULL,\n  active BOOLEAN DEFAULT false,\n  tags TEXT[] DEFAULT \'{}\',\n  status TEXT DEFAULT \'unknown\',\n  last_execution_status TEXT,\n  last_executed_at TIMESTAMPTZ,\n  executions_24h INTEGER DEFAULT 0,\n  success_24h INTEGER DEFAULT 0,\n  error_24h INTEGER DEFAULT 0,\n  avg_execution_ms INTEGER,\n  updated_at TIMESTAMPTZ DEFAULT now(),\n  created_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS n8n_events (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id TEXT,\n  workflow_name TEXT,\n  event_type TEXT NOT NULL,\n  status TEXT DEFAULT \'success\',\n  message TEXT,\n  error_message TEXT,\n  execution_ms INTEGER,\n  metadata JSONB DEFAULT \'{}\',\n  created_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS workflow_reports (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id TEXT NOT NULL,\n  workflow_name TEXT,\n  title TEXT NOT NULL,\n  description TEXT,\n  status TEXT DEFAULT \'open\',\n  resolution TEXT,\n  report_data JSONB DEFAULT \'{}\',\n  created_by TEXT DEFAULT \'user\',\n  created_at TIMESTAMPTZ DEFAULT now(),\n  updated_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS n8n_metrics (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  snapshot_at TIMESTAMPTZ DEFAULT now(),\n  total_workflows INTEGER DEFAULT 0,\n  active_workflows INTEGER DEFAULT 0,\n  total_executions_24h INTEGER DEFAULT 0,\n  total_success_24h INTEGER DEFAULT 0,\n  total_error_24h INTEGER DEFAULT 0,\n  overall_success_rate DECIMAL(5,4),\n  avg_execution_time_ms INTEGER\n);\n\nCREATE TABLE IF NOT EXISTS n8n_heartbeat (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  checked_at TIMESTAMPTZ DEFAULT now(),\n  is_alive BOOLEAN DEFAULT true,\n  n8n_version TEXT,\n  active_workflows INTEGER,\n  api_response_ms INTEGER,\n  details JSONB DEFAULT \'{}\'\n);\n\nALTER TABLE workflow_reports ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"anon_all\" ON workflow_reports FOR ALL TO anon USING (true) WITH CHECK (true);\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_workflows;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_events;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_heartbeat;\nALTER PUBLICATION supabase_realtime ADD TABLE workflow_reports;\n'
+      );
+    } else if (!erroExibido) {
+      mostrarErro('Erro: ' + e.message);
+    }
     console.error(e);
     W = []; R = []; H = null;
   }
