@@ -1,8 +1,7 @@
 -- ============================================================
--- N8N COMMAND CENTER — Supabase Schema
--- Versão: 1.0.0
--- Uso:   Rodar no SQL Editor do Supabase
---        (projeto: gswzuzetverulcgzhynb)
+-- N8N COMMAND CENTER — Supabase Schema v2.0
+-- Uso: Rodar no SQL Editor do Supabase
+--      (projeto: gswzuzetverulcgzhynb)
 -- ============================================================
 
 -- 1. WORKFLOWS (populado pelo Collector a cada 2 min)
@@ -24,7 +23,7 @@ CREATE TABLE IF NOT EXISTS n8n_workflows (
   created_at             TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. EVENTS (populado pelo Collector + futuros webhooks SDR)
+-- 2. EVENTS (populado pelo Collector + futuros webhooks)
 CREATE TABLE IF NOT EXISTS n8n_events (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workflow_id   TEXT,
@@ -39,7 +38,24 @@ CREATE TABLE IF NOT EXISTS n8n_events (
   created_at    TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. METRICS (snapshots históricos — populado a cada 1h)
+-- 3. REPORTS / CHAMADOS (populado manualmente via dashboard)
+-- Histórico de ocorrências, resoluções e tarefas por workflow
+CREATE TABLE IF NOT EXISTS workflow_reports (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workflow_id   TEXT NOT NULL,
+  workflow_name TEXT,
+  title         TEXT NOT NULL,
+  description   TEXT,
+  status        TEXT DEFAULT 'open'
+    CHECK (status IN ('open','in_progress','resolved','closed')),
+  resolution    TEXT,
+  report_data   JSONB DEFAULT '{}',
+  created_by    TEXT DEFAULT 'user',
+  created_at    TIMESTAMPTZ DEFAULT now(),
+  updated_at    TIMESTAMPTZ DEFAULT now()
+);
+
+-- 4. METRICS (snapshots históricos — populado a cada 1h)
 CREATE TABLE IF NOT EXISTS n8n_metrics (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   snapshot_at           TIMESTAMPTZ DEFAULT now(),
@@ -52,7 +68,7 @@ CREATE TABLE IF NOT EXISTS n8n_metrics (
   avg_execution_time_ms INTEGER
 );
 
--- 4. HEARTBEAT (populado a cada 5 min)
+-- 5. HEARTBEAT (populado a cada 5 min)
 CREATE TABLE IF NOT EXISTS n8n_heartbeat (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   checked_at        TIMESTAMPTZ DEFAULT now(),
@@ -63,7 +79,7 @@ CREATE TABLE IF NOT EXISTS n8n_heartbeat (
   details           JSONB DEFAULT '{}'
 );
 
--- 5. SDR AGENTS (cadastro manual das SDRs)
+-- 6. SDR AGENTS (cadastro manual)
 CREATE TABLE IF NOT EXISTS sdr_agents (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id    TEXT UNIQUE NOT NULL,
@@ -76,7 +92,7 @@ CREATE TABLE IF NOT EXISTS sdr_agents (
   updated_at  TIMESTAMPTZ DEFAULT now()
 );
 
--- 6. SDR EVENTS (granular — para quando webhooks SDR forem adicionados)
+-- 7. SDR EVENTS
 CREATE TABLE IF NOT EXISTS sdr_events (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id      TEXT REFERENCES sdr_agents(agent_id),
@@ -97,8 +113,6 @@ CREATE TABLE IF NOT EXISTS sdr_events (
 -- ============================================================
 -- VIEWS
 -- ============================================================
-
--- Visão dos workflows com status derivado
 CREATE OR REPLACE VIEW vw_workflows_status AS
 SELECT
   *,
@@ -114,7 +128,6 @@ SELECT
   END as is_sdr
 FROM n8n_workflows;
 
--- Resumo diário
 CREATE OR REPLACE VIEW vw_daily_summary AS
 SELECT
   COUNT(*) as total_workflows,
@@ -129,12 +142,24 @@ SELECT
   END as success_rate_pct
 FROM n8n_workflows;
 
+-- Reports count per workflow
+CREATE OR REPLACE VIEW vw_workflow_reports_count AS
+SELECT
+  workflow_id,
+  COUNT(*) as total_reports,
+  COUNT(*) FILTER (WHERE status IN ('open','in_progress')) as open_reports,
+  COUNT(*) FILTER (WHERE status = 'resolved') as resolved_reports,
+  MAX(created_at) as last_report_at
+FROM workflow_reports
+GROUP BY workflow_id;
+
 -- ============================================================
 -- REALTIME
 -- ============================================================
 ALTER PUBLICATION supabase_realtime ADD TABLE n8n_workflows;
 ALTER PUBLICATION supabase_realtime ADD TABLE n8n_events;
 ALTER PUBLICATION supabase_realtime ADD TABLE n8n_heartbeat;
+ALTER PUBLICATION supabase_realtime ADD TABLE workflow_reports;
 ALTER PUBLICATION supabase_realtime ADD TABLE sdr_events;
 
 -- ============================================================
@@ -147,3 +172,4 @@ CREATE INDEX IF NOT EXISTS idx_n8n_heartbeat_time ON n8n_heartbeat(checked_at DE
 CREATE INDEX IF NOT EXISTS idx_n8n_metrics_time ON n8n_metrics(snapshot_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sdr_events_agent ON sdr_events(agent_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sdr_events_type ON sdr_events(event_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_workflow_reports_wf ON workflow_reports(workflow_id, created_at DESC);
