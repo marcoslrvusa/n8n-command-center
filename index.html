@@ -4,482 +4,291 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>N8N Command Center — V4 Company</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
---red:#E31919;--red-dark:#B80F0F;
---c:#1A1D24;--c2:#2D3139;--cm:#6B7280;
---bg:#FFFFFF;--bga:#F4F5F7;--bgc:#FFFFFF;
---bd:#E2E5E8;--bdl:#D0D4D8;
---sd:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
---sdu:0 4px 12px rgba(0,0,0,0.08);
---r:6px;--rs:4px;
---ok:#16A34A;--okb:#F0FDF4;--er:#DC2626;--erb:#FEF2F2;
---wa:#D97706;--wab:#FFFBEB;--in:#2563EB;--inb:#EFF6FF;
+  --v4:#E31919;--v4d:#B80F0F;--v4l:#FF2424;
+  --ok:#16A34A;--er:#DC2626;--wa:#D97706;
+  --bg:#F4F5F7;--card:#fff;--bd:#DEE2E6;
 }
-.dark{--c:#E8E8E8;--c2:#C8C8C8;--cm:#787878;--bg:#0E0E0E;--bga:#0A0A0A;--bgc:#141414;--bd:#252525;--bdl:#383838;--sd:0 1px 4px rgba(0,0,0,.4);--sdu:0 8px 24px rgba(0,0,0,.5);--okb:rgba(22,163,74,.12);--erb:rgba(220,38,38,.12);--wab:rgba(217,119,6,.12);--inb:rgba(37,99,235,.12)}
-body{background:var(--bga);color:var(--c);font-family:'Barlow',sans-serif;font-size:15px;min-height:100vh}
-::selection{background:var(--red);color:#fff}
-.tbar{background:var(--red);padding:5px 24px;display:flex;align-items:center;justify-content:space-between}
-.tbar-l{display:flex;align-items:center;gap:12px}
-.tbar-l .lgo{height:24px}
-.tbar-l span{color:rgba(255,255,255,.7);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
-.tbar-r{display:flex;align-items:center;gap:10px}
-.tbar-r .st{display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.7)}
-.tbar-r .st .dt{width:5px;height:5px;border-radius:50%;background:#22C55E;display:inline-block}
-.tbt{background:rgba(255,255,255,.15);border:none;border-radius:3px;color:#fff;padding:2px 7px;font-size:9px;cursor:pointer}
-.hd{padding:14px 24px;background:var(--bg);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
-.hd h2{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700}
-.hd .ins{font-size:10px;color:var(--cm);padding:2px 7px;border:1px solid var(--bd);border-radius:3px;background:var(--bga)}
-.hd-r{display:flex;align-items:center;gap:12px}
-.hd-r .up{font-size:10px;color:var(--cm)}
-.ct{max-width:1200px;margin:0 auto;padding:16px 24px 32px}
-.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.kpc{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sd)}
-.kpc .l{font-size:10px;font-weight:600;color:var(--cm);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
-.kpc .v{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;line-height:1.2}
-.kpc .v.r{color:var(--er)}.kpc .v.g{color:var(--ok)}
-.kpc .s{font-size:10px;color:var(--cm);margin-top:1px}
-.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.sh h3{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;color:var(--c)}
-.sh .sc{font-size:11px;color:var(--cm)}
-.tl{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.sr{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:4px 8px;max-width:200px}
-.sr input{background:none;border:none;color:var(--c);font-size:12px;width:100%;outline:none;font-family:'Barlow',sans-serif}
-.sr input::placeholder{color:var(--cm)}
-.fb{font-size:10px;padding:3px 10px;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--cm);cursor:pointer;font-weight:600;transition:all .12s}
-.fb:hover{border-color:var(--cm);color:var(--c)}
-.fb.on{background:var(--red);border-color:var(--red);color:#fff}
-.bt{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:var(--rs);border:none;cursor:pointer;font-weight:600;font-size:11px;transition:all .12s}
-.btp{background:var(--red);color:#fff}
-.btp:hover{background:var(--red-dark)}
-.bto{background:transparent;border:1px solid var(--bd);color:var(--cm)}
-.bto:hover{border-color:var(--bdl);color:var(--c)}
-.btx{padding:2px 8px;font-size:10px}
-.wfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-bottom:20px}
-.wfc{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .12s;box-shadow:var(--sd)}
-.wfc:hover{border-color:var(--bdl);box-shadow:var(--sdu)}
-.wr1{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
-.wr1 .nm{font-size:13px;font-weight:600;color:var(--c);flex:1;margin-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wb{font-size:8px;font-weight:700;padding:1px 7px;border-radius:7px;text-transform:uppercase;flex-shrink:0}
-.wb.on{background:var(--okb);color:var(--ok)}
-.wb.off{background:var(--bga);color:var(--cm)}
-.wb.err{background:var(--erb);color:var(--er)}
-.wr2{display:flex;gap:10px;font-size:11px;color:var(--cm);margin-bottom:5px;font-weight:500}
-.wbar{height:2px;border-radius:2px;background:var(--bd);overflow:hidden;margin-bottom:5px}
-.wbarf{height:100%;border-radius:2px}
-.wr3{display:flex;align-items:center;justify-content:space-between;padding-top:4px;border-top:1px solid var(--bd)}
-.wr3 .rp{font-size:10px;color:var(--cm)}
-.wr3 .rp strong{color:var(--c)}
-.wr3 .tm{font-size:9px;color:var(--cm)}
-.emp{padding:32px;text-align:center;color:var(--cm);font-size:12px;border:1px dashed var(--bd);border-radius:var(--r);grid-column:1/-1;background:var(--bg)}
-.fd{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;box-shadow:var(--sd)}
-.fi{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--bd);align-items:baseline}
-.fi:last-child{border-bottom:none}
-.fd .ft{font-size:9px;color:var(--cm);flex-shrink:0}
-.fd .fw{font-size:10px;font-weight:600;flex-shrink:0;color:var(--c)}
-.fd .fti{font-size:11px;flex:1;color:var(--c2)}
-.fst{font-size:9px;padding:1px 5px;border-radius:6px;font-weight:600}
-.fst.o{background:var(--wab);color:var(--wa)}
-.fst.rs{background:var(--okb);color:var(--ok)}
-.fst.ip{background:var(--inb);color:var(--in)}
-.fst.cl{background:var(--bga);color:var(--cm)}
-.ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
-.ov.on{display:flex}
-.m{background:var(--bg);border:1px solid var(--bd);border-radius:8px;width:100%;max-width:720px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.12)}
-.mt{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.mt h3{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
-.mc{background:none;border:none;color:var(--cm);font-size:16px;cursor:pointer;padding:2px 5px;border-radius:3px}
-.mc:hover{background:var(--bga);color:var(--c)}
-.mb{flex:1;overflow-y:auto;padding:16px}
-.mts{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:12px}
-.mtb{padding:5px 14px;font-size:11px;font-weight:600;color:var(--cm);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.2px}
-.mtb:hover{color:var(--c)}
-.mtb.on{color:var(--red);border-bottom-color:var(--red)}
-.mtc{display:none}.mtc.on{display:block}
-.ig{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.ic{padding:4px 7px;background:var(--bga);border-radius:3px}
-.ic .l{font-size:8px;color:var(--cm);text-transform:uppercase;letter-spacing:.2px}
-.ic .v{font-size:11px;font-weight:600;color:var(--c);margin-top:1px}
-.tl2{position:relative;padding-left:20px}
-.tl2::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:1px;background:var(--bd)}
-.tli{position:relative;padding:0 0 12px 12px}
-.tli:last-child{padding-bottom:0}
-.tld{position:absolute;left:-18px;top:4px;width:8px;height:8px;border-radius:50%;border:2px solid var(--bd);background:var(--bg);z-index:1}
-.tld.rs{background:var(--ok);border-color:var(--ok)}
-.tld.cl{background:var(--cm);border-color:var(--cm)}
-.tld.ip{background:var(--in);border-color:var(--in)}
-.tld.o{background:var(--wa);border-color:var(--wa)}
-.tl1{display:flex;align-items:center;justify-content:space-between;margin-bottom:1px}
-.tlt{font-weight:600;font-size:12px;color:var(--c)}
-.tls{font-size:8px;padding:1px 5px;border-radius:5px;text-transform:uppercase;font-weight:600}
-.tls.o{background:var(--wab);color:var(--wa)}
-.tls.rs{background:var(--okb);color:var(--ok)}
-.tls.cl{background:var(--bga);color:var(--cm)}
-.tls.ip{background:var(--inb);color:var(--in)}
-.tldt{font-size:9px;color:var(--cm);margin-bottom:2px}
-.tlds{font-size:11px;color:var(--c2);margin-bottom:2px}
-.tlrs{font-size:11px;color:var(--cm);background:var(--bga);border-radius:3px;border-left:2px solid var(--ok);margin-top:2px}
-.tle{padding:20px;text-align:center;color:var(--cm);font-size:12px}
-.fg{margin-bottom:10px}
-.fg label{display:block;font-size:10px;font-weight:600;color:var(--cm);margin-bottom:2px;text-transform:uppercase;letter-spacing:.2px}
-.fg input,.fg textarea,.fg select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:6px 8px;color:var(--c);font-family:'Barlow',sans-serif;font-size:12px;outline:none}
-.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--red)}
-.fg textarea{resize:vertical;min-height:48px}
-.fg select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%236B7280' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
-.fa{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
-#errBanner{background:var(--erb);color:var(--er);padding:6px 12px;border-radius:var(--rs);font-size:11px;margin-bottom:10px;display:none;border:1px solid rgba(220,38,38,.2)}
-@media(max-width:640px){
-.tbar{padding:4px 12px}.hd{padding:10px 12px}.ct{padding:12px}.kp{grid-template-columns:repeat(2,1fr)}.wfg{grid-template-columns:1fr}.tbar-l span{display:none}
-}
+body{background:var(--bg);font-family:'Barlow',sans-serif;color:#1A1D24}
+.text-v4{color:var(--v4)!important}
+.bg-v4{background:var(--v4)!important}
+.btn-v4{background:var(--v4);color:#fff;border:none;font-weight:600}
+.btn-v4:hover{background:var(--v4d)!important;color:#fff!important}
+.btn-outline-v4{color:var(--v4);border-color:var(--v4)}
+.btn-outline-v4:hover{background:var(--v4);color:#fff}
+.font-cond{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.3px}
+.ff-mono{font-family:SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.75rem}
+.bd-placeholder{border:1px dashed var(--bd);border-radius:8px;padding:2rem;text-align:center;color:#999}
+.card{border-color:var(--bd);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.wf-card{cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.wf-card:hover{border-left-color:var(--v4);transform:translateY(-1px)}
+.wf-card .badge{font-size:.65rem;font-weight:700;letter-spacing:.3px;padding:.25em .7em}
+.wf-card .stat-bar{height:4px;border-radius:2px;background:var(--bd)}
+.wf-card .stat-bar .fill{height:100%;border-radius:2px;transition:width .3s}
+.tl{position:relative;padding-left:1.5rem}
+.tl::before{content:'';position:absolute;left:7px;top:.25rem;bottom:.25rem;width:2px;background:var(--bd)}
+.tl-it{position:relative;padding:0 0 1rem 1rem}
+.tl-it:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-20px;top:5px;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--bd);background:#fff;z-index:1}
+.tl-dot.ok{background:var(--ok);border-color:var(--ok)}
+.tl-dot.er{background:var(--er);border-color:var(--er)}
+.tl-dot.wa{background:var(--wa);border-color:var(--wa)}
+.tl-dot.in{background:#2563EB;border-color:#2563EB}
+.tl-dot.cl{background:#999;border-color:#999}
+#errBox{display:none;border:1px solid rgba(220,38,38,.3);background:#FEF2F2;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.875rem}
+#errBox .sql-block{display:none;margin-top:.5rem;padding:.5rem;background:#fff;border:1px solid #ddd;border-radius:4px;font-size:.75rem;max-height:200px;overflow:auto}
+.modal-header .btn-close:focus{box-shadow:none}
+.dropdown-toggle::after{display:none}
+@media(max-width:576px){.kpi-grid{gap:.5rem}}
 </style>
 </head>
 <body>
 
-<div class="tbar">
-  <div class="tbar-l">
-    <svg class="lgo" viewBox="0 0 60 20" fill="none"><text x="0" y="16" font-family="'Barlow Condensed',sans-serif" font-size="16" font-weight="900" fill="white">V4</text><rect x="28" y="2" width="1" height="15" fill="rgba(255,255,255,.3)"/><text x="34" y="16" font-family="'Barlow Condensed',sans-serif" font-size="12" font-weight="700" fill="rgba(255,255,255,.7)">N8N</text></svg>
-    <span>Command Center</span>
-  </div>
-  <div class="tbar-r">
-    <div class="st"><span class="dt" id="sDot"></span><span id="sLbl">Iniciando...</span></div>
-    <button class="tbt" id="themeBtn">🌙 Dark</button>
-  </div>
-</div>
-
-<div class="hd">
-  <div><h2>Dashboard</h2><span class="ins">n8n.fvmarketing.com.br</span></div>
-  <div class="hd-r">
-    <span class="up" id="updAt">—</span>
-    <button class="bt btp btx" onclick="abrirReport()">+ Chamado</button>
-  </div>
-</div>
-
-<div class="ct">
-
-  <div id="errBanner" style="display:none">
-    <div id="errMsg"></div>
-    <pre id="errSql" style="display:none;margin-top:8px;padding:8px;background:var(--bga);border-radius:4px;font-size:10px;overflow-x:auto;max-height:200px;color:var(--c2);font-family:monospace;white-space:pre-wrap;word-break:break-all"></pre>
-    <button id="errToggle" style="display:none;margin-top:6px;background:none;border:1px solid var(--bd);border-radius:3px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--c)">Mostrar SQL</button>
-  </div>
-
-  <div class="kp">
-    <div class="kpc"><div class="l">Workflows</div><div class="v" id="kpTot">—</div><div class="s">Total registrados</div></div>
-    <div class="kpc"><div class="l">Sucesso</div><div class="v g" id="kpSuc">—</div><div class="s"><span id="kpSucN">—</span> execuções OK (24h)</div></div>
-    <div class="kpc"><div class="l">Execuções 24h</div><div class="v" id="kpExec">—</div><div class="s">Total de execuções</div></div>
-    <div class="kpc"><div class="l">Chamados</div><div class="v r" id="kpRep">—</div><div class="s"><span id="kpRepD">—</span></div></div>
-  </div>
-
-  <div class="tl">
-    <div class="sr"><input type="text" id="busca" placeholder="Buscar..." oninput="filtrar()"></div>
-    <div id="fbC">
-      <button class="fb on" data-f="all" onclick="setF('all')">Todos</button>
-      <button class="fb" data-f="on" onclick="setF('on')">Ativos</button>
-      <button class="fb" data-f="err" onclick="setF('err')">Erro</button>
-      <button class="fb" data-f="off" onclick="setF('off')">Inativos</button>
-      <button class="fb" data-f="sdr" onclick="setF('sdr')">SDR</button>
+<!-- TOP BAR -->
+<nav class="navbar navbar-expand bg-v4 px-3 px-md-4 py-2">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center gap-3">
+      <img src="data:image/png;base64,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YYekYYekYYekYYekYYekYYekYYekNWyH2/ZtcNghadghadghadghadghadghadghadghadghaQ3b2X7f4JOTW9ghadghadghadghadghadghadghadghadghadghaQ3b+dTgc5Nj2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFpzdpRH5t7bnKN9Q5J4/voJK1hO1/80uCTk1sN20kO/7xp8unJoabtpHNw2fAMrE/nAa9U3j0ceplOaRabt0OTAt4Bcz/ApLGzRgW00+v6nyZ21qiAdp699j9N7KxR2CFp2CFp2CFp2CFp7GeRtIB2Qixl7KxR2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFpAe10e/6niZ01CjskDTskDTskDTskDTskDTskDTskDTskDTskje+jk7SAdg4u/U8TO2sUdkgadkgadkgadkgadkgadkgadkgadkgadkhaQDvH7/xPEztrFHZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIWkA7aifANLGzPgW0kwz8TxI7axR2SBp2SBp2SBp2SBp2SBp2SBp2SBp2SBp2SFpIOw/OvE8SO2sUdkgadkgadkgadkgadkgadkgadkgadkgadkhaSDtfvfU+SeysUSHt3L3xPknsrFEbZyfEHU5IFHZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIWkg7z157nyR21qiQdu4NvU8SO2sU2yySFtLOo1Pvk8TOGnXta7tyOP7Fh73sP6OPO/5XO9hZp9RFvqjHizxJ/h7/1eC8+EV3jGB/DO1zd/L4sLM3HXZIGnZIGnZImgpyJ0mKIeyQNBXkTgMUQyrInQYohlSS7I6angnayFSQbwxSBCkV5BNWiqDj1E6vu/zfEU3XS+1wcJAkfU7tPP+r6bmgTeypCnM7QGp/F/pj+wCX16DWpz5qOwyWyb7+O22HwTLZdz3UdhjwkH1bp9lpigx4yLrzUWaHS3+Rbf13+enRnMJDtnXPilPr+SidLHv0srDDXjrZdfzD+Cs9bLTIruH15OtgT980Oyu0YaWbrLGdvetmZ4U2q95JMrGjBoyWybyn3ye3X2FmtEzmjbJvx4/t8E0bMm+YDXEml05gtEym5audWzvsppNp+WqndMkWVjxkVrHaKdlhxENmFaud8qWi/vlTM7NCm9V4tVO2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" alt="V4 Company" height="30">
+      <span class="d-none d-sm-inline text-white-50 font-cond" style="font-size:.7rem;letter-spacing:.15em">N8N COMMAND CENTER</span>
     </div>
-  </div>
-
-  <div class="sh">
-    <h3>Workflows</h3>
-    <span class="sc" id="wfC"></span>
-  </div>
-  <div class="wfg" id="wfG"></div>
-
-  <div class="sh">
-    <h3>Atividade Recente</h3>
-    <span class="sc" id="fdC">—</span>
-  </div>
-  <div class="fd" id="fd"></div>
-
-</div>
-
-<div class="ov" id="mOv">
-  <div class="m">
-    <div class="mt"><h3 id="mT">Workflow</h3><button class="mc" onclick="fecharM()">✕</button></div>
-    <div class="mts">
-      <span class="mtb on" data-tb="ov" onclick="swTb('ov')">Visão Geral</span>
-      <span class="mtb" data-tb="rp" onclick="swTb('rp')">Histórico</span>
-    </div>
-    <div class="mb">
-      <div class="mtc on" id="tbOv">
-        <div class="ig" id="mInfo"></div>
-        <div style="margin-top:8px;display:flex;gap:3px;flex-wrap:wrap" id="mTags"></div>
-        <div style="margin-top:10px"><button class="bt btp btx" onclick="abrirReport(wfAtual)">+ Chamado</button></div>
+    <div class="d-flex align-items-center gap-2 gap-sm-3">
+      <div class="d-flex align-items-center gap-1 text-white-50" style="font-size:.8rem">
+        <span class="d-inline-block rounded-circle" style="width:7px;height:7px;background:#22C55E" id="sDot"></span>
+        <span id="sLbl">Conectando...</span>
       </div>
-      <div class="mtc" id="tbRp">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:10px;font-weight:600;color:var(--cm);text-transform:uppercase">Histórico</span>
-          <button class="bt bto btx" onclick="abrirReport(wfAtual)">+ Novo</button>
+      <button class="btn btn-sm text-white border-0" style="background:rgba(255,255,255,.15);font-size:.7rem" id="themeBtn">🌙 Dark</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<div class="bg-white border-bottom px-3 px-md-4 py-3">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h2 class="font-cond mb-0" style="font-size:1.4rem">Dashboard</h2>
+      <small class="text-muted ff-mono">n8n.fvmarketing.com.br</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <small class="text-muted ff-mono" id="updAt">—</small>
+      <button class="btn btn-v4 btn-sm" onclick="abrirR()">+ Chamado</button>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR BANNER -->
+<div id="errBox">
+  <div id="errMsg" class="fw-semibold"></div>
+  <pre id="errSql" class="sql-block"></pre>
+  <button id="errToggle" class="btn btn-sm btn-outline-danger mt-1" style="display:none;font-size:.75rem">Mostrar SQL</button>
+</div>
+
+<!-- CONTENT -->
+<div class="container-fluid px-3 px-md-4 py-3" style="max-width:1320px">
+
+  <!-- KPIs -->
+  <div class="row g-2 g-md-3 mb-3">
+    <div class="col-6 col-md-3"><div class="card border p-3 h-100"><small class="text-muted text-uppercase fw-semibold" style="font-size:.7rem;letter-spacing:.5px">Workflows</small><div class="font-cond" style="font-size:2rem;line-height:1.2" id="kpTot">—</div><small class="text-muted">Total registrados</small></div></div>
+    <div class="col-6 col-md-3"><div class="card border p-3 h-100"><small class="text-muted text-uppercase fw-semibold" style="font-size:.7rem;letter-spacing:.5px">Sucesso</small><div class="font-cond text-success" style="font-size:2rem;line-height:1.2" id="kpSuc">—</div><small class="text-muted"><span id="kpSucN">—</span> execuções OK (24h)</small></div></div>
+    <div class="col-6 col-md-3"><div class="card border p-3 h-100"><small class="text-muted text-uppercase fw-semibold" style="font-size:.7rem;letter-spacing:.5px">Execuções 24h</small><div class="font-cond" style="font-size:2rem;line-height:1.2" id="kpExec">—</div><small class="text-muted">Total de execuções</small></div></div>
+    <div class="col-6 col-md-3"><div class="card border p-3 h-100"><small class="text-muted text-uppercase fw-semibold" style="font-size:.7rem;letter-spacing:.5px">Chamados</small><div class="font-cond text-danger" style="font-size:2rem;line-height:1.2" id="kpRep">—</div><small class="text-muted"><span id="kpRepD">—</span></small></div></div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <div class="input-group input-group-sm" style="max-width:220px">
+      <span class="input-group-text bg-white text-muted border">🔍</span>
+      <input type="text" class="form-control" id="busca" placeholder="Buscar workflow..." oninput="filtrar()">
+    </div>
+    <div class="d-flex gap-1 flex-wrap" id="fbC">
+      <button class="btn btn-sm btn-dark" data-f="all" onclick="setF('all')">Todos</button>
+      <button class="btn btn-sm btn-outline-secondary" data-f="on" onclick="setF('on')">Ativos</button>
+      <button class="btn btn-sm btn-outline-secondary" data-f="err" onclick="setF('err')">Erro</button>
+      <button class="btn btn-sm btn-outline-secondary" data-f="off" onclick="setF('off')">Inativos</button>
+      <button class="btn btn-sm btn-outline-secondary" data-f="sdr" onclick="setF('sdr')">SDR</button>
+    </div>
+  </div>
+
+  <!-- SECTION -->
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="font-cond mb-0" style="font-size:1.1rem">Workflows</h3>
+    <small class="text-muted" id="wfC"></small>
+  </div>
+  <div class="row g-2 g-md-3 mb-4" id="wfG"></div>
+
+  <!-- FEED -->
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h3 class="font-cond mb-0" style="font-size:1.1rem">Atividade Recente</h3>
+    <small class="text-muted" id="fdC">—</small>
+  </div>
+  <div class="card border" id="fd"></div>
+
+</div>
+
+<!-- MODAL WORKFLOW -->
+<div class="modal fade" id="mModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-bottom pb-2">
+        <h5 class="font-cond mb-0" id="mT">Workflow</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <ul class="nav nav-tabs px-3 pt-2" style="border-bottom-color:var(--bd)">
+          <li class="nav-item"><button class="nav-link active px-3 py-2" style="font-size:.85rem;color:var(--v4)" onclick="swT('ov')">Visão Geral</button></li>
+          <li class="nav-item"><button class="nav-link px-3 py-2 text-muted" style="font-size:.85rem" onclick="swT('rp')">Histórico</button></li>
+        </ul>
+        <div class="p-3">
+          <div id="tbOv">
+            <div class="row g-2 mb-2" id="mInfo"></div>
+            <div class="d-flex gap-1 flex-wrap mb-2" id="mTags"></div>
+            <button class="btn btn-v4 btn-sm" onclick="abrirR(wfAtual)">+ Chamado</button>
+          </div>
+          <div id="tbRp" style="display:none">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong style="font-size:.85rem;color:var(--v4)">Histórico de Chamados</strong>
+              <button class="btn btn-outline-v4 btn-sm" onclick="abrirR(wfAtual)">+ Novo</button>
+            </div>
+            <div class="tl" id="mTimeline"></div>
+          </div>
         </div>
-        <div class="tl2" id="mTimeline"></div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="ov" id="rOv">
-  <div class="m" style="max-width:460px">
-    <div class="mt"><h3>Novo Chamado</h3><button class="mc" onclick="fecharR()">✕</button></div>
-    <div class="mb">
-      <form id="rF" onsubmit="enviarReport(event)">
-        <div class="fg"><label>Workflow</label><select id="rWf" required></select></div>
-        <div class="fg"><label>Título</label><input type="text" id="rTit" placeholder="Ex: Erro na API" required></div>
-        <div class="fg"><label>Descrição</label><textarea id="rDesc" rows="2"></textarea></div>
-        <div class="fg"><label>Status</label><select id="rSt"><option value="open">Aberto</option><option value="in_progress">Em Andamento</option><option value="resolved">Resolvido</option><option value="closed">Fechado</option></select></div>
-        <div class="fg"><label>Resolução</label><textarea id="rRes" rows="2"></textarea></div>
-        <div class="fa"><button type="button" class="bt bto btx" onclick="fecharR()">Cancelar</button><button type="submit" class="bt btp btx">Salvar</button></div>
-      </form>
+<!-- MODAL NOVO REPORT -->
+<div class="modal fade" id="rModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-bottom pb-2">
+        <h5 class="font-cond mb-0">Novo Chamado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="rF" onsubmit="envR(event)">
+          <div class="mb-2"><label class="form-label fw-semibold text-muted" style="font-size:.8rem">Workflow</label><select class="form-select form-select-sm" id="rWf" required></select></div>
+          <div class="mb-2"><label class="form-label fw-semibold text-muted" style="font-size:.8rem">Título</label><input type="text" class="form-control form-control-sm" id="rTit" placeholder="Ex: Erro na API do Meta" required></div>
+          <div class="mb-2"><label class="form-label fw-semibold text-muted" style="font-size:.8rem">Descrição</label><textarea class="form-control form-control-sm" id="rDesc" rows="2"></textarea></div>
+          <div class="mb-2"><label class="form-label fw-semibold text-muted" style="font-size:.8rem">Status</label><select class="form-select form-select-sm" id="rSt"><option value="open">Aberto</option><option value="in_progress">Em Andamento</option><option value="resolved">Resolvido</option><option value="closed">Fechado</option></select></div>
+          <div class="mb-2"><label class="form-label fw-semibold text-muted" style="font-size:.8rem">Resolução</label><textarea class="form-control form-control-sm" id="rRes" rows="2" placeholder="O que foi feito?"></textarea></div>
+          <div class="d-flex gap-2 justify-content-end mt-3"><button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-v4 btn-sm">Salvar</button></div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// CONFIG
-const SB_URL = 'https://gswzuzetverulcgzhynb.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd3p1emV0dmVydWxjZ3poeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjU5NzgsImV4cCI6MjA3NTUwMTk3OH0.GMNBzrfT78G5l7xk8QtAkeHlQJwWaZ4edKSEHMN560c';
+const SB_URL='https://gswzuzetverulcgzhynb.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd3p1emV0dmVydWxjZ3poeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjU5NzgsImV4cCI6MjA3NTUwMTk3OH0.GMNBzrfT78G5l7xk8QtAkeHlQJwWaZ4edKSEHMN560c';
+let W=[],R=[],H=null,filtro='all',wfAtual=null,errMostrado=0;
+async function api(t,o=''){const r=await fetch(SB_URL+'/rest/v1/'+t+'?select=*'+o,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});if(!r.ok){const e=await r.text();throw new Error(t+': '+e.substring(0,150))}return r.json()}
+function esc(s){return String(s).replace(/[&<>]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
+function tema(t){document.documentElement.classList.toggle('dark',t==='dark');localStorage.setItem('n8n-t',t);document.getElementById('themeBtn').textContent=t==='dark'?'☀️ Light':'🌙 Dark'}
+document.getElementById('themeBtn').onclick=()=>tema(document.documentElement.classList.contains('dark')?'light':'dark');
+const dk=document.createElement('style');dk.textContent='.dark{filter:invert(1) hue-rotate(180deg)} .dark img,.dark .bg-v4,.dark [style*="background:var(--v4)"]{filter:invert(1) hue-rotate(180deg)}';document.head.appendChild(dk);
 
-// STATE
-let W = [], R = [], H = null, filtro = 'all', wfAtual = null, erroExibido = false;
-
-// THEME
-function tema(t) {
-  document.documentElement.classList.toggle('dark', t === 'dark');
-  localStorage.setItem('n8n-t', t);
-  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
-}
-document.getElementById('themeBtn').onclick = () => tema(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
-
-// API HELPERS
-async function apiGet(tabela, opts = '') {
-  const url = SB_URL + '/rest/v1/' + tabela + '?select=*' + opts;
-  const r = await fetch(url, {
-    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
-  });
-  if (!r.ok) {
-    const txt = await r.text();
-    throw new Error(tabela + ': ' + r.status + ' ' + txt.substring(0, 100));
-  }
-  return r.json();
-}
-
-async function apiPost(tabela, dados) {
-  const r = await fetch(SB_URL + '/rest/v1/' + tabela, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, Prefer: 'return=minimal' },
-    body: JSON.stringify(dados)
-  });
-  if (!r.ok) { const txt = await r.text(); throw new Error(tabela + ': ' + r.status + ' ' + txt.substring(0, 100)); }
-}
-
-function mostrarErro(msg, sql) {
-  const el = document.getElementById('errBanner');
-  document.getElementById('errMsg').textContent = '⚠ ' + msg;
-  el.style.display = 'block';
-  if (sql) {
-    document.getElementById('errSql').textContent = sql;
-    document.getElementById('errSql').style.display = 'none';
-    const btn = document.getElementById('errToggle');
-    btn.style.display = 'inline-block';
-    btn.onclick = function() {
-      const s = document.getElementById('errSql');
-      s.style.display = s.style.display === 'none' ? 'block' : 'none';
-      btn.textContent = s.style.display === 'block' ? 'Esconder SQL' : 'Mostrar SQL';
-    };
-  }
-  erroExibido = true;
-}
-
-// FETCH
-async function carregar() {
-  try {
-    const [wf, rp, hb] = await Promise.all([
-      apiGet('n8n_workflows', '&order=name.asc'),
-      apiGet('workflow_reports', '&order=created_at.desc'),
-      apiGet('n8n_heartbeat', '&order=checked_at.desc&limit=1')
+async function carregar(){
+  try{
+    const[wf,rp,hb]=await Promise.all([
+      api('n8n_workflows','&order=name.asc'),
+      api('workflow_reports','&order=created_at.desc'),
+      api('n8n_heartbeat','&order=checked_at.desc&limit=1')
     ]);
-    W = wf || []; R = rp || []; H = hb?.[0] || null;
-    document.getElementById('errBanner').style.display = 'none';
-    erroExibido = false;
-    } catch (e) {
-    const msg = e.message || '';
-    if (msg.includes('404') || msg.includes('Could not find the table')) {
-      if (!erroExibido) mostrarErro(
-        'Tabelas não existem no Supabase. Copie o SQL abaixo, abra https://app.supabase.com/project/gswzuzetverulcgzhynb/sql/new , cole tudo e clique em Run.',
-        'CREATE TABLE IF NOT EXISTS n8n_workflows (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  n8n_id TEXT UNIQUE NOT NULL,\n  name TEXT NOT NULL,\n  active BOOLEAN DEFAULT false,\n  tags TEXT[] DEFAULT \'{}\',\n  status TEXT DEFAULT \'unknown\',\n  last_execution_status TEXT,\n  last_executed_at TIMESTAMPTZ,\n  executions_24h INTEGER DEFAULT 0,\n  success_24h INTEGER DEFAULT 0,\n  error_24h INTEGER DEFAULT 0,\n  avg_execution_ms INTEGER,\n  updated_at TIMESTAMPTZ DEFAULT now(),\n  created_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS n8n_events (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id TEXT,\n  workflow_name TEXT,\n  event_type TEXT NOT NULL,\n  status TEXT DEFAULT \'success\',\n  message TEXT,\n  error_message TEXT,\n  execution_ms INTEGER,\n  metadata JSONB DEFAULT \'{}\',\n  created_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS workflow_reports (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id TEXT NOT NULL,\n  workflow_name TEXT,\n  title TEXT NOT NULL,\n  description TEXT,\n  status TEXT DEFAULT \'open\',\n  resolution TEXT,\n  report_data JSONB DEFAULT \'{}\',\n  created_by TEXT DEFAULT \'user\',\n  created_at TIMESTAMPTZ DEFAULT now(),\n  updated_at TIMESTAMPTZ DEFAULT now()\n);\n\nCREATE TABLE IF NOT EXISTS n8n_metrics (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  snapshot_at TIMESTAMPTZ DEFAULT now(),\n  total_workflows INTEGER DEFAULT 0,\n  active_workflows INTEGER DEFAULT 0,\n  total_executions_24h INTEGER DEFAULT 0,\n  total_success_24h INTEGER DEFAULT 0,\n  total_error_24h INTEGER DEFAULT 0,\n  overall_success_rate DECIMAL(5,4),\n  avg_execution_time_ms INTEGER\n);\n\nCREATE TABLE IF NOT EXISTS n8n_heartbeat (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  checked_at TIMESTAMPTZ DEFAULT now(),\n  is_alive BOOLEAN DEFAULT true,\n  n8n_version TEXT,\n  active_workflows INTEGER,\n  api_response_ms INTEGER,\n  details JSONB DEFAULT \'{}\'\n);\n\nALTER TABLE workflow_reports ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"anon_all\" ON workflow_reports FOR ALL TO anon USING (true) WITH CHECK (true);\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_workflows;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_events;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_heartbeat;\nALTER PUBLICATION supabase_realtime ADD TABLE workflow_reports;\n'
-      );
-    } else if (!erroExibido) {
-      mostrarErro('Erro: ' + e.message);
+    W=wf||[];R=rp||[];H=hb?.[0]||null;
+    const eb=document.getElementById('errBox');eb.style.display='none';errMostrado=0;
+  }catch(e){
+    if(!errMostrado++){
+      const el=document.getElementById('errBox'),m=el.querySelector('#errMsg'),s=el.querySelector('#errSql'),t=el.querySelector('#errToggle');
+      m.textContent='⚠ Tabelas não existem no Supabase. Copie o SQL, abra https://app.supabase.com/project/gswzuzetverulcgzhynb/sql/new , cole e clique Run.';
+      s.textContent='CREATE TABLE IF NOT EXISTS n8n_workflows (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),n8n_id TEXT UNIQUE NOT NULL,name TEXT NOT NULL,active BOOLEAN DEFAULT false,tags TEXT[] DEFAULT \'{}\',status TEXT DEFAULT \'unknown\',last_execution_status TEXT,last_executed_at TIMESTAMPTZ,executions_24h INTEGER DEFAULT 0,success_24h INTEGER DEFAULT 0,error_24h INTEGER DEFAULT 0,avg_execution_ms INTEGER,updated_at TIMESTAMPTZ DEFAULT now(),created_at TIMESTAMPTZ DEFAULT now());\nCREATE TABLE IF NOT EXISTS n8n_events (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),workflow_id TEXT,workflow_name TEXT,event_type TEXT NOT NULL,status TEXT DEFAULT \'success\',message TEXT,error_message TEXT,execution_ms INTEGER,metadata JSONB DEFAULT \'{}\',created_at TIMESTAMPTZ DEFAULT now());\nCREATE TABLE IF NOT EXISTS workflow_reports (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),workflow_id TEXT NOT NULL,workflow_name TEXT,title TEXT NOT NULL,description TEXT,status TEXT DEFAULT \'open\',resolution TEXT,report_data JSONB DEFAULT \'{}\',created_by TEXT DEFAULT \'user\',created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());\nALTER TABLE workflow_reports ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "anon_all" ON workflow_reports FOR ALL TO anon USING (true) WITH CHECK (true);\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_workflows;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_events;\nALTER PUBLICATION supabase_realtime ADD TABLE n8n_heartbeat;\nALTER PUBLICATION supabase_realtime ADD TABLE workflow_reports;';
+      t.style.display='inline-block';t.onclick=()=>{s.style.display=s.style.display==='none'?'block':'none';t.textContent=s.style.display==='block'?'Esconder SQL':'Mostrar SQL'};
+      el.style.display='block';
     }
-    console.error(e);
-    W = []; R = []; H = null;
+    W=[];R=[];H=null;
   }
   render();
 }
 
-// RENDER
-function render() {
-  const tot = W.length, atv = W.filter(w => w.active).length;
-  const ex = W.reduce((s, w) => s + (w.executions_24h || 0), 0);
-  const ok = W.reduce((s, w) => s + (w.success_24h || 0), 0);
-  const tx = ex > 0 ? ((ok / ex) * 100).toFixed(1) : '0.0';
-  const abertos = R.filter(r => r.status === 'open' || r.status === 'in_progress').length;
-
-  document.getElementById('kpTot').textContent = tot || '—';
-  document.getElementById('kpSuc').textContent = tx + '%';
-  document.getElementById('kpSucN').textContent = ok;
-  document.getElementById('kpExec').textContent = ex || '—';
-  document.getElementById('kpRep').textContent = abertos || 0;
-  document.getElementById('kpRepD').textContent = R.length + ' total · ' + abertos + ' abertos';
-
-  if (H) {
-    document.getElementById('sDot').style.background = H.is_alive ? '#22C55E' : '#DC2626';
-    document.getElementById('sLbl').textContent = H.is_alive ? 'Conectado' : 'Desconectado';
-  }
-  document.getElementById('updAt').textContent = new Date().toLocaleTimeString('pt-BR');
-
-  renderGrid();
-  renderFeed();
+function render(){
+  const tot=W.length,ex=W.reduce((s,w)=>s+(w.executions_24h||0),0),ok=W.reduce((s,w)=>s+(w.success_24h||0),0),tx=ex>0?((ok/ex)*100).toFixed(1):'0',abs=R.filter(r=>r.status==='open'||r.status==='in_progress').length;
+  document.getElementById('kpTot').textContent=tot||0;document.getElementById('kpSuc').textContent=tx+'%';document.getElementById('kpSucN').textContent=ok;document.getElementById('kpExec').textContent=ex||0;
+  document.getElementById('kpRep').textContent=abs;document.getElementById('kpRepD').textContent=R.length+' total · '+abs+' abertos';
+  if(H){document.getElementById('sDot').style.background=H.is_alive?'#22C55E':'#DC2626';document.getElementById('sLbl').textContent=H.is_alive?'Conectado':'Desconectado'}
+  document.getElementById('updAt').textContent=new Date().toLocaleTimeString('pt-BR');
+  grid();feed();
 }
 
-function renderGrid() {
-  const el = document.getElementById('wfG');
-  const q = (document.getElementById('busca').value || '').toLowerCase();
-  let f = W;
-  if (q) f = f.filter(w => w.name.toLowerCase().includes(q));
-  if (filtro === 'on') f = f.filter(w => w.active);
-  else if (filtro === 'off') f = f.filter(w => !w.active);
-  else if (filtro === 'err') f = f.filter(w => w.last_execution_status === 'error' || w.status === 'error');
-  else if (filtro === 'sdr') f = f.filter(w => w.name.toUpperCase().includes('SDR'));
-
-  document.getElementById('wfC').textContent = f.length + ' de ' + W.length;
-
-  if (!f.length) {
-    el.innerHTML = '<div class="emp"><strong>' + (W.length ? 'Nenhum corresponde' : 'Nenhum workflow encontrado') + '</strong>' + (W.length ? '' : '<br><span style="font-size:11px">Ative o workflow Collector no N8N para popular dados.</span>') + '</div>';
-    return;
-  }
-
-  const rc = {}; const ro = {};
-  R.forEach(r => { rc[r.workflow_id] = (rc[r.workflow_id] || 0) + 1; if (r.status === 'open' || r.status === 'in_progress') ro[r.workflow_id] = (ro[r.workflow_id] || 0) + 1; });
-
-  el.innerHTML = f.map(w => {
-    const s = !w.active ? 'off' : (w.last_execution_status === 'error' || w.status === 'error' ? 'err' : 'on');
-    const p = (w.executions_24h || 0) > 0 ? ((w.success_24h || 0) / w.executions_24h * 100) : 0;
-    const bc = p >= 80 ? 'var(--ok)' : p >= 50 ? 'var(--wa)' : 'var(--er)';
-    return '<div class="wfc" onclick="abrirM(\'' + w.n8n_id + '\')">'
-      + '<div class="wr1"><div class="nm">' + escHtml(w.name) + '</div><span class="wb ' + s + '">' + s + '</span></div>'
-      + '<div class="wr2"><span>⚡ ' + (w.executions_24h || 0) + '</span><span>✅ ' + (w.success_24h || 0) + '</span><span>❌ ' + (w.error_24h || 0) + '</span></div>'
-      + (p > 0 ? '<div class="wbar"><div class="wbarf" style="width:' + p + '%;background:' + bc + '"></div></div>' : '')
-      + '<div class="wr3"><div class="rp">📋 <strong>' + (rc[w.n8n_id] || 0) + '</strong> chamados' + (ro[w.n8n_id] ? ' · <span style="color:var(--wa)">' + ro[w.n8n_id] + ' abertos</span>' : '') + '</div><div class="tm">' + (w.last_executed_at ? new Date(w.last_executed_at).toLocaleString('pt-BR') : 'nunca') + '</div></div>'
-      + '</div>';
+function grid(){
+  const el=document.getElementById('wfG'),q=(document.getElementById('busca').value||'').toLowerCase();
+  let f=W;if(q)f=f.filter(w=>w.name.toLowerCase().includes(q));
+  if(filtro==='on')f=f.filter(w=>w.active);else if(filtro==='off')f=f.filter(w=>!w.active);else if(filtro==='err')f=f.filter(w=>w.last_execution_status==='error'||w.status==='error');else if(filtro==='sdr')f=f.filter(w=>w.name.toUpperCase().includes('SDR'));
+  document.getElementById('wfC').textContent=f.length+' de '+W.length;
+  if(!f.length){el.innerHTML='<div class="col"><div class="card border p-5 text-center"><p class="text-muted mb-0"><strong>'+(W.length?'Nenhum corresponde':'Nenhum workflow encontrado')+'</strong><br><span style="font-size:.8rem">Ative o Collector no N8N para popular dados.</span></p></div></div>';return}
+  const rc={},ro={};R.forEach(r=>{rc[r.workflow_id]=(rc[r.workflow_id]||0)+1;if(r.status==='open'||r.status==='in_progress')ro[r.workflow_id]=(ro[r.workflow_id]||0)+1});
+  el.innerHTML=f.map(w=>{
+    const s=!w.active?'off':(w.last_execution_status==='error'||w.status==='error'?'err':'on'),p=(w.executions_24h||0)>0?((w.success_24h||0)/w.executions_24h*100):0;
+    const bc=p>=80?'var(--ok)':p>=50?'var(--wa)':'var(--er)',bl={on:'bg-success',off:'bg-secondary',err:'bg-danger'};
+    return '<div class="col-md-6 col-lg-4"><div class="card wf-card border p-3 h-100" onclick="abrirM(\''+w.n8n_id+'\')">'
+     +'<div class="d-flex justify-content-between align-items-start mb-2"><strong>'+esc(w.name)+'</strong><span class="badge '+bl[s]+'">'+s+'</span></div>'
+     +'<div class="small text-muted mb-2 d-flex gap-3"><span>⚡ '+(w.executions_24h||0)+' exec</span><span>✅ '+(w.success_24h||0)+' ok</span><span>❌ '+(w.error_24h||0)+' err</span></div>'
+     +(p>0?'<div class="stat-bar mb-2"><div class="fill" style="width:'+p+'%;background:'+bc+'"></div></div>':'')
+     +'<div class="d-flex justify-content-between align-items-center small pt-2 border-top"><span>📋 <strong>'+(rc[w.n8n_id]||0)+'</strong> chamados'+(ro[w.n8n_id]?' <span style="color:var(--wa)">· '+ro[w.n8n_id]+' abertos</span>':'')+'</span><span class="text-muted ff-mono">'+(w.last_executed_at?new Date(w.last_executed_at).toLocaleString('pt-BR'):'nunca')+'</span></div>'
+     +'</div></div>'
   }).join('');
 }
 
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function renderFeed() {
-  const el = document.getElementById('fd');
-  const r = [...R].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
-  document.getElementById('fdC').textContent = r.length + ' eventos';
-  if (!r.length) { el.innerHTML = '<div style="padding:10px;text-align:center;color:var(--cm);font-size:12px">Nenhuma atividade.</div>'; return; }
-  const lb = { open: 'Aberto', in_progress: 'Andamento', resolved: 'Resolvido', closed: 'Fechado' };
-  el.innerHTML = r.map(i =>
-    '<div class="fi"><span class="ft">' + new Date(i.created_at).toLocaleString('pt-BR') + '</span>'
-    + '<span class="fw">' + escHtml(i.workflow_name || '—') + '</span>'
-    + '<span class="fti">' + escHtml(i.title) + '</span>'
-    + '<span class="fst ' + ({open:'o',in_progress:'ip',resolved:'rs',closed:'cl'}[i.status] || 'o') + '">' + (lb[i.status] || i.status) + '</span></div>'
-  ).join('');
+function feed(){
+  const el=document.getElementById('fd'),r=[...R].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,8);
+  document.getElementById('fdC').textContent=r.length+' eventos';
+  if(!r.length){el.innerHTML='<div class="p-4 text-center text-muted"><small>Nenhuma atividade registrada.</small></div>';return}
+  const lb={open:'Aberto',in_progress:'Andamento',resolved:'Resolvido',closed:'Fechado'},cl={open:'warning',in_progress:'primary',resolved:'success',closed:'secondary'};
+  el.innerHTML='<div class="list-group list-group-flush">'+r.map(i=>'<div class="list-group-item d-flex align-items-center gap-2 py-2 px-3"><small class="text-muted ff-mono flex-shrink-0">'+new Date(i.created_at).toLocaleString('pt-BR')+'</small><strong class="small flex-shrink-0">'+esc(i.workflow_name||'—')+'</strong><span class="small flex-fill">'+esc(i.title)+'</span><span class="badge bg-'+cl[i.status]+' flex-shrink-0">'+(lb[i.status]||i.status)+'</span></div>').join('')+'</div>';
 }
 
-function setF(f) {
-  filtro = f;
-  document.querySelectorAll('#fbC .fb').forEach(b => b.classList.toggle('on', b.dataset.f === f));
-  renderGrid();
-}
-function filtrar() { renderGrid(); }
+function setF(f){filtro=f;document.querySelectorAll('#fbC .btn').forEach(b=>{b.classList.toggle('btn-dark',b.dataset.f===f);b.classList.toggle('btn-outline-secondary',b.dataset.f!==f)});grid()}
+function filtrar(){grid()}
 
 // MODAL
-function abrirM(id) {
-  wfAtual = id;
-  const w = W.find(x => x.n8n_id === id);
-  if (!w) return;
-  const s = !w.active ? 'inactive' : (w.last_execution_status === 'error' ? 'error' : 'active');
-  document.getElementById('mT').textContent = w.name;
-  const tx = w.executions_24h > 0 ? ((w.success_24h / w.executions_24h) * 100).toFixed(1) + '%' : '—';
-  document.getElementById('mInfo').innerHTML =
-    '<div class="ic"><div class="l">N8N ID</div><div class="v" style="font-size:10px">' + escHtml(w.n8n_id) + '</div></div>'
-    + '<div class="ic"><div class="l">Status</div><div class="v">' + s + '</div></div>'
-    + '<div class="ic"><div class="l">Execuções 24h</div><div class="v">' + (w.executions_24h || 0) + '</div></div>'
-    + '<div class="ic"><div class="l">Taxa de Sucesso</div><div class="v">' + tx + '</div></div>'
-    + '<div class="ic"><div class="l">Última Exec</div><div class="v" style="font-size:11px">' + (w.last_executed_at ? new Date(w.last_executed_at).toLocaleString('pt-BR') : 'Nunca') + '</div></div>'
-    + '<div class="ic"><div class="l">Status Exec</div><div class="v">' + (w.last_execution_status || '—') + '</div></div>';
-  document.getElementById('mTags').innerHTML = (w.tags && w.tags.length) ? w.tags.map(t => '<span style="font-size:10px;padding:1px 6px;border-radius:2px;background:var(--bga);border:1px solid var(--bd)">' + escHtml(t) + '</span>').join('') : '<span style="font-size:11px;color:var(--cm)">Sem tags</span>';
-  const tl = document.getElementById('mTimeline');
-  const wfR = R.filter(r => r.workflow_id === id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  if (!wfR.length) { tl.innerHTML = '<div class="tle">Nenhum chamado registrado.</div>'; }
-  else {
-    const lb = { open:'Aberto', in_progress:'Andamento', resolved:'Resolvido', closed:'Fechado' };
-    tl.innerHTML = wfR.map(r =>
-      '<div class="tli"><div class="tld ' + r.status + '"></div>'
-      + '<div class="tl1"><span class="tlt">' + escHtml(r.title) + '</span><span class="tls ' + r.status + '">' + (lb[r.status] || r.status) + '</span></div>'
-      + '<div class="tldt">' + new Date(r.created_at).toLocaleString('pt-BR') + '</div>'
-      + (r.description ? '<div class="tlds">' + escHtml(r.description) + '</div>' : '')
-      + (r.resolution ? '<div class="tlrs" style="padding:4px 8px">' + escHtml(r.resolution) + '</div>' : '')
-      + '</div>'
-    ).join('');
-  }
-  swTb('ov');
-  document.getElementById('mOv').classList.add('on');
+function abrirM(id){
+  wfAtual=id;const w=W.find(x=>x.n8n_id===id);if(!w)return;const s=!w.active?'inactive':(w.last_execution_status==='error'?'error':'active');
+  document.getElementById('mT').textContent=w.name;const tx=w.executions_24h>0?((w.success_24h/w.executions_24h)*100).toFixed(1)+'%':'—';
+  document.getElementById('mInfo').innerHTML=
+   '<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">N8N ID</small><div class="fw-semibold ff-mono" style="font-size:.75rem">'+esc(w.n8n_id)+'</div></div></div>'
+  +'<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">Status</small><div class="fw-semibold">'+s+'</div></div></div>'
+  +'<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">Exec 24h</small><div class="fw-semibold">'+(w.executions_24h||0)+'</div></div></div>'
+  +'<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">Sucesso</small><div class="fw-semibold">'+tx+'</div></div></div>'
+  +'<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">Última Exec</small><div class="fw-semibold small">'+(w.last_executed_at?new Date(w.last_executed_at).toLocaleString('pt-BR'):'Nunca')+'</div></div></div>'
+  +'<div class="col-6"><div class="card border p-2"><small class="text-muted" style="font-size:.65rem;text-transform:uppercase">Status Exec</small><div class="fw-semibold">'+(w.last_execution_status||'—')+'</div></div></div>';
+  document.getElementById('mTags').innerHTML=(w.tags&&w.tags.length)?w.tags.map(t=>'<span class="badge bg-light text-dark border px-2 py-1" style="font-size:.75rem">'+esc(t)+'</span>').join(''):'<small class="text-muted">Sem tags</small>';
+  const tl=document.getElementById('mTimeline'),wfR=R.filter(r=>r.workflow_id===id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  if(!wfR.length){tl.innerHTML='<div class="text-center text-muted py-3"><small>Nenhum chamado registrado.</small></div>'}
+  else{const lb={open:'Aberto',in_progress:'Andamento',resolved:'Resolvido',closed:'Fechado'},cl={open:'wa',in_progress:'in',resolved:'ok',closed:'cl'};
+  tl.innerHTML=wfR.map(r=>'<div class="tl-it"><div class="tl-dot '+(cl[r.status]||'cl')+'"></div><div class="d-flex justify-content-between align-items-start"><strong style="font-size:.85rem">'+esc(r.title)+'</strong><span class="badge bg-'+({open:'warning',in_progress:'primary',resolved:'success',closed:'secondary'}[r.status]||'secondary')+' small">'+(lb[r.status]||r.status)+'</span></div><small class="text-muted">'+new Date(r.created_at).toLocaleString('pt-BR')+'</small>'+(r.description?'<div class="small mt-1">'+esc(r.description)+'</div>':'')+(r.resolution?'<div class="small p-2 rounded mt-1" style="background:var(--bg);border-left:3px solid var(--ok)">'+esc(r.resolution)+'</div>':'')+'</div>').join('')}
+  swT('ov');
+  new bootstrap.Modal(document.getElementById('mModal')).show();
+}
+function swT(t){document.getElementById('tbOv').style.display=t==='ov'?'block':'none';document.getElementById('tbRp').style.display=t==='rp'?'block':'none'}
+
+// REPORT
+function abrirR(id){
+  document.getElementById('rWf').innerHTML=W.map(w=>'<option value="'+w.n8n_id+'"'+(w.n8n_id===id?' selected':'')+'>'+esc(w.name)+'</option>').join('');
+  document.getElementById('rTit').value='';document.getElementById('rDesc').value='';document.getElementById('rSt').value='open';document.getElementById('rRes').value='';
+  new bootstrap.Modal(document.getElementById('rModal')).show();
+}
+async function envR(e){
+  e.preventDefault();const wfId=document.getElementById('rWf').value,wf=W.find(w=>w.n8n_id===wfId);
+  try{
+    await fetch(SB_URL+'/rest/v1/workflow_reports',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,Prefer:'return=minimal'},body:JSON.stringify({workflow_id:wfId,workflow_name:wf?wf.name:wfId,title:document.getElementById('rTit').value.trim(),description:document.getElementById('rDesc').value.trim()||null,status:document.getElementById('rSt').value,resolution:document.getElementById('rRes').value.trim()||null,created_by:'user'})});
+    bootstrap.Modal.getInstance(document.getElementById('rModal')).hide();await carregar();
+  }catch(err){alert('Erro: '+err.message)}
 }
 
-function swTb(t) {
-  document.querySelectorAll('.mtb').forEach(x => x.classList.toggle('on', x.dataset.tb === t));
-  document.querySelectorAll('.mtc').forEach(x => x.classList.toggle('on', x.id === 'tb' + t.charAt(0).toUpperCase() + t.slice(1)));
-}
-function fecharM() { document.getElementById('mOv').classList.remove('on'); wfAtual = null; }
-
-// REPORT FORM
-function abrirReport(id) {
-  const sel = document.getElementById('rWf');
-  sel.innerHTML = W.map(w => '<option value="' + w.n8n_id + '"' + (w.n8n_id === id ? ' selected' : '') + '>' + escHtml(w.name) + '</option>').join('');
-  document.getElementById('rTit').value = '';
-  document.getElementById('rDesc').value = '';
-  document.getElementById('rSt').value = 'open';
-  document.getElementById('rRes').value = '';
-  document.getElementById('rOv').classList.add('on');
-}
-function fecharR() { document.getElementById('rOv').classList.remove('on'); }
-async function enviarReport(e) {
-  e.preventDefault();
-  const wfId = document.getElementById('rWf').value;
-  const wf = W.find(w => w.n8n_id === wfId);
-  try {
-    await apiPost('workflow_reports', {
-      workflow_id: wfId,
-      workflow_name: wf ? wf.name : wfId,
-      title: document.getElementById('rTit').value.trim(),
-      description: document.getElementById('rDesc').value.trim() || null,
-      status: document.getElementById('rSt').value,
-      resolution: document.getElementById('rRes').value.trim() || null,
-      created_by: 'user'
-    });
-    fecharR();
-    await carregar();
-  } catch (err) {
-    alert('Erro: ' + err.message);
-  }
-}
-
-// CLOSE MODALS ON OVERLAY CLICK
-document.getElementById('mOv').onclick = function(e) { if (e.target === this) fecharM(); };
-document.getElementById('rOv').onclick = function(e) { if (e.target === this) fecharR(); };
-
-// INIT
-tema(localStorage.getItem('n8n-t') || 'light');
-carregar();
-setInterval(carregar, 1800000);
+tema(localStorage.getItem('n8n-t')||'light');carregar();setInterval(carregar,1800000);
 </script>
 </body>
 </html>
