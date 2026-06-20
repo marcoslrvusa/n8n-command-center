@@ -3,800 +3,493 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>N8N Command Center — Gestão de Workflows</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<title>N8N Command Center — V4 Company</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
---red:#E31919;--red-gradient:linear-gradient(135deg,#E31919 0%,#FF4D4D 100%);--red-hover:#B80F0F;--red-light:#FFF0F0;
---success:#22C55E;--success-bg:rgba(34,197,94,0.12);--error:#EF4444;--error-bg:rgba(239,68,68,0.12);
---warning:#F59E0B;--warning-bg:rgba(245,158,11,0.12);--info:#3B82F6;--info-bg:rgba(59,130,246,0.12);
---bg:#0A0A0A;--bg-alt:#0E0E0E;--bg-card:rgba(18,18,18,0.9);--bg-card-hover:rgba(28,28,28,0.95);
---border:#252525;--border-light:#383838;
---text:#FFFFFF;--text-secondary:#E8E8E8;--text-muted:#787878;
---glass:rgba(255,255,255,0.03);--glass-border:rgba(255,255,255,0.06);
---shadow:0 8px 32px rgba(0,0,0,0.5);--radius:12px;--radius-sm:8px;--radius-lg:16px;
---selection-color:#fff;--skeleton-from:var(--bg-card);--skeleton-to:var(--bg-card-hover);
-}
-.theme-light{
---red:#CC1818;--red-hover:#AA1212;--red-light:#FFF5F5;
---success:#16A34A;--success-bg:rgba(22,163,74,0.08);--error:#DC2626;--error-bg:rgba(220,38,38,0.08);
---warning:#D97706;--warning-bg:rgba(217,119,6,0.08);--info:#2563EB;--info-bg:rgba(37,99,235,0.08);
---bg:#F4F5F7;--bg-alt:#FFFFFF;--bg-card:rgba(255,255,255,0.95);--bg-card-hover:rgba(255,255,255,1);
+--red:#E31919;--red-dark:#B80F0F;--red-light:#FF2424;
+--color:#1A1D24;--color-secondary:#2D3139;--color-muted:#6B7280;
+--bg:#FFFFFF;--bg-alt:#F4F5F7;--bg-card:#FFFFFF;
 --border:#E2E5E8;--border-light:#D0D4D8;
---text:#1A1D24;--text-secondary:#2D3139;--text-muted:#6B7280;
---glass:rgba(0,0,0,0.02);--glass-border:rgba(0,0,0,0.06);
---shadow:0 4px 16px rgba(0,0,0,0.07);--skeleton-from:#E8EAED;--skeleton-to:#F0F2F5;
---selection-color:var(--red);
+--shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+--shadow-hover:0 8px 24px rgba(0,0,0,0.08);
+--radius:8px;--radius-sm:4px;
+--success:#16A34A;--success-bg:#F0FDF4;--error:#DC2626;--error-bg:#FEF2F2;
+--warning:#D97706;--warning-bg:#FFFBEB;--info:#2563EB;--info-bg:#EFF6FF;
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
-::selection{background:var(--red);color:var(--selection-color)}
-.theme-light ::selection{background:var(--red);color:#fff}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
-a{color:var(--red);text-decoration:none}
-
-/* App layout */
-.app{display:flex;min-height:100vh}
-.sidebar{
-width:200px;flex-shrink:0;background:var(--bg-alt);border-right:1px solid var(--border);
-padding:20px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
-}
-.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:8px}
-.sidebar-logo h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px}
-.sidebar-logo span{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
-.sidebar-nav{list-style:none;padding:0;flex:1}
-.sidebar-nav li{}
-.sidebar-nav a{
-display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--text-muted);
-font-size:14px;font-weight:500;transition:all .15s;border-left:3px solid transparent;
-}
-.sidebar-nav a:hover{color:var(--text);background:var(--glass);border-left-color:var(--border-light)}
-.sidebar-nav a.active{color:var(--text);background:rgba(227,25,25,0.06);border-left-color:var(--red)}
-.main{flex:1;padding:24px 28px;max-width:calc(100vw - 200px)}
-
-/* Header bar */
-.topbar{
-display:flex;align-items:center;justify-content:space-between;padding:0 0 20px;
-border-bottom:1px solid var(--border);margin-bottom:20px;
-}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-left h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.5px}
-.topbar-instance{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);background:var(--bg-card);padding:4px 10px;border-radius:6px;border:1px solid var(--border)}
-.topbar-right{display:flex;align-items:center;gap:14px}
-.theme-toggle{
-width:42px;height:22px;border-radius:11px;background:var(--border);border:none;cursor:pointer;
-position:relative;transition:background .3s;flex-shrink:0;
-}
-.theme-toggle .thumb{
-position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
-background:var(--text-muted);transition:all .3s;display:flex;align-items:center;justify-content:center;font-size:9px;
-}
-.theme-light .theme-toggle{background:var(--red)}
-.theme-light .theme-toggle .thumb{left:22px;background:#fff}
-.connection{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block}
-.dot.error{background:var(--error)}
-.dot.warning{background:var(--warning)}
-.dot.pulse{animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 var(--success-bg)}50%{opacity:.8;box-shadow:0 0 0 5px var(--success-bg)}}
-.last-update{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted)}
-
-/* KPI row */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.kpi-card{
-background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-padding:16px 20px;position:relative;overflow:hidden;transition:all .2s;
-}
-.kpi-card:hover{border-color:var(--border-light);background:var(--bg-card-hover)}
-.kpi-glare{position:absolute;top:0;left:0;width:4px;height:100%;border-radius:2px 0 0 2px}
-.kpi-glare.green{background:var(--success)}
-.kpi-glare.red{background:var(--red)}
-.kpi-glare.amber{background:var(--warning)}
-.kpi-glare.blue{background:var(--info)}
-.kpi-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+body{background:var(--bg-alt);color:var(--color);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;min-height:100vh}
+::selection{background:var(--red);color:#fff}
+/* Top bar */
+.topbar{background:var(--red);padding:6px 32px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-left .v4-logo{height:26px;width:auto}
+.topbar-left span{color:rgba(255,255,255,0.7);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-right .conn{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.7);font-weight:500}
+.topbar-right .conn .dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
+.theme-btn{background:rgba(255,255,255,.15);border:none;border-radius:4px;color:#fff;padding:3px 8px;font-size:10px;cursor:pointer;transition:background .15s}
+.theme-btn:hover{background:rgba(255,255,255,.25)}
+/* Header */
+.header{padding:16px 32px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.header h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.3px;color:var(--color)}
+.header .instance{font-size:11px;font-family:'Barlow',sans-serif;color:var(--color-muted);background:var(--bg-alt);padding:3px 8px;border-radius:4px;border:1px solid var(--border)}
+.header-right{display:flex;align-items:center;gap:14px}
+.last-upd{font-size:11px;color:var(--color-muted)}
+/* Content */
+.content{max-width:1280px;margin:0 auto;padding:20px 32px 40px}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;box-shadow:var(--shadow)}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.kpi-label{font-size:11px;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:.3px}
+.kpi-badge{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600}
+.kpi-badge.green{background:var(--success-bg);color:var(--success)}
+.kpi-badge.red{background:var(--error-bg);color:var(--error)}
 .kpi-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1.2}
 .kpi-value.green{color:var(--success)}
 .kpi-value.red{color:var(--red)}
-.kpi-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
-
+.kpi-sub{font-size:11px;color:var(--color-muted);margin-top:2px}
+/* Section */
+.section{margin-bottom:20px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-head h3{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--color)}
+.section-head .count{font-size:12px;color:var(--color-muted)}
 /* Toolbar */
-.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px}
-.toolbar-left{display:flex;align-items:center;gap:8px;flex:1}
-.toolbar-right{display:flex;gap:8px}
-.search-box{
-display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);
-border-radius:var(--radius-sm);padding:6px 12px;max-width:260px;flex:1;
-}
-.search-box input{background:none;border:none;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;width:100%;outline:none}
-.search-box input::placeholder{color:var(--text-muted)}
-.search-box .icon{color:var(--text-muted);font-size:13px}
-.filter-btn{
-font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);
-background:transparent;color:var(--text-muted);cursor:pointer;
-font-family:'Barlow Condensed',sans-serif;font-weight:500;letter-spacing:.5px;text-transform:uppercase;transition:all .15s;
-}
-.filter-btn:hover{border-color:var(--text-muted);color:var(--text-secondary)}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.search-wrap{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;max-width:220px}
+.search-wrap input{background:none;border:none;color:var(--color);font-size:13px;width:100%;outline:none;font-family:'Barlow',sans-serif}
+.search-wrap input::placeholder{color:var(--color-muted)}
+.search-wrap .ico{color:var(--color-muted);font-size:12px}
+.filter-btn{font-size:11px;padding:4px 12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--color-muted);cursor:pointer;font-weight:600;transition:all .15s;font-family:'Barlow',sans-serif}
+.filter-btn:hover{border-color:var(--color-muted);color:var(--color)}
 .filter-btn.active{background:var(--red);border-color:var(--red);color:#fff}
-
-.btn{
-display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-sm);
-border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;
-letter-spacing:.3px;text-transform:uppercase;transition:all .15s;
-}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:600;font-size:12px;transition:all .15s}
 .btn-primary{background:var(--red);color:#fff}
-.btn-primary:hover{background:var(--red-hover)}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
-.btn-outline:hover{border-color:var(--border-light);color:var(--text)}
-.btn-sm{padding:4px 12px;font-size:11px}
-.btn-xs{padding:2px 8px;font-size:10px;border-radius:4px}
-
-/* Workflow Cards Grid */
-.section-label{
-font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
-letter-spacing:.3px;text-transform:uppercase;margin-bottom:12px;color:var(--text-muted);
-display:flex;align-items:center;justify-content:space-between;
-}
-.wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:24px}
-.wf-card{
-background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
-padding:16px 18px;cursor:pointer;transition:all .2s;position:relative;
-}
-.wf-card:hover{background:var(--bg-card-hover);border-color:var(--border-light);transform:translateY(-1px);box-shadow:var(--shadow)}
-.wf-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
-.wf-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);line-height:1.3;flex:1;margin-right:8px}
-.wf-badge{
-font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;
-letter-spacing:.3px;flex-shrink:0;margin-top:2px;
-}
-.wf-badge.active{background:var(--success-bg);color:var(--success);border:1px solid rgba(34,197,94,.2)}
-.wf-badge.inactive{background:rgba(120,120,120,.1);color:var(--text-muted);border:1px solid var(--border)}
-.wf-badge.error{background:var(--error-bg);color:var(--error);border:1px solid rgba(239,68,68,.2)}
-.wf-badge.unknown{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
-.wf-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
-.wf-meta span{display:flex;align-items:center;gap:4px}
-.wf-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);margin-top:4px}
-.wf-reports{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted)}
-.wf-reports strong{color:var(--text)}
-.wf-last{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
-
-/* Loading states */
-.skeleton{background:var(--skeleton-from);border-radius:6px;animation:shimmer 1.5s infinite}
-@keyframes shimmer{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
-.empty-state{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:14px;grid-column:1/-1}
-.empty-state strong{color:var(--text-secondary);display:block;margin-bottom:4px}
-
-/* ===== MODAL ===== */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.btn-primary:hover{background:var(--red-dark)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--color-muted)}
+.btn-outline:hover{border-color:var(--border-light);color:var(--color)}
+.btn-xs{padding:3px 10px;font-size:11px}
+/* Workflow grid */
+.wf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.wf-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.wf-card:hover{border-color:var(--border-light);box-shadow:var(--shadow-hover)}
+.wf-row1{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.wf-name{font-size:14px;font-weight:600;color:var(--color);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.2px;flex-shrink:0;margin-top:1px}
+.wf-badge.active{background:var(--success-bg);color:var(--success)}
+.wf-badge.inactive{background:var(--bg-alt);color:var(--color-muted)}
+.wf-badge.error{background:var(--error-bg);color:var(--error)}
+.wf-row2{display:flex;gap:12px;font-size:12px;color:var(--color-muted);margin-bottom:6px;font-family:'Barlow',sans-serif;font-weight:500}
+.wf-row2 span{display:flex;align-items:center;gap:3px}
+.wf-bar{height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:6px}
+.wf-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.wf-row3{display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border)}
+.wf-reps{font-size:11px;color:var(--color-muted)}
+.wf-reps strong{color:var(--color)}
+.wf-time{font-size:10px;color:var(--color-muted)}
+/* Empty */
+.empty{padding:40px;text-align:center;color:var(--color-muted);font-size:13px;background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius);grid-column:1/-1}
+.empty strong{color:var(--color);display:block;margin-bottom:4px}
+/* Feed */
+.feed{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow)}
+.feed-item{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--border);align-items:baseline}
+.feed-item:last-child{border-bottom:none}
+.feed-time{font-size:10px;color:var(--color-muted);flex-shrink:0;font-weight:500;font-family:'Barlow',sans-serif}
+.feed-wf{font-size:11px;font-weight:600;flex-shrink:0;color:var(--color)}
+.feed-title{flex:1;font-size:12px;color:var(--color-secondary)}
+.feed-status{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600}
+.feed-status.open{background:var(--warning-bg);color:var(--warning)}
+.feed-status.resolved{background:var(--success-bg);color:var(--success)}
+.feed-status.in_progress{background:var(--info-bg);color:var(--info)}
+.feed-status.closed{background:var(--bg-alt);color:var(--color-muted)}
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
 .modal-overlay.open{display:flex}
-.modal{
-background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-lg);
-width:100%;max-width:800px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
-box-shadow:0 24px 64px rgba(0,0,0,.5);
-}
-.theme-light .modal{border-color:var(--border-light);box-shadow:0 16px 48px rgba(0,0,0,.12)}
-.modal-header{
-display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
-border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.modal-header h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
-.modal-header .modal-badge{font-size:10px;padding:2px 8px;border-radius:10px;text-transform:uppercase;font-weight:700}
-.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:4px;line-height:1;border-radius:4px;transition:all .15s}
-.modal-close:hover{background:var(--glass);color:var(--text)}
-.modal-body{flex:1;overflow-y:auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.modal-body.full{grid-template-columns:1fr}
-.modal-section{margin-bottom:0}
-.modal-section-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-
-/* Info section */
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.info-item{padding:6px 10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border)}
-.info-item .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
-.info-item .value{font-size:13px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px}
-.stat-bar{height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
-.stat-bar-fill{height:100%;border-radius:2px;transition:width .5s}
-
-/* Timeline */
-.timeline{position:relative;padding-left:24px}
-.timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border)}
-.timeline-item{position:relative;padding:0 0 16px 16px}
-.timeline-item:last-child{padding-bottom:0}
-.timeline-dot{
-position:absolute;left:-21px;top:4px;width:12px;height:12px;border-radius:50%;
-border:2px solid var(--border);background:var(--bg-alt);z-index:1;
-}
-.timeline-dot.resolved{background:var(--success);border-color:var(--success)}
-.timeline-dot.closed{background:var(--text-muted);border-color:var(--text-muted)}
-.timeline-dot.in_progress{background:var(--info);border-color:var(--info)}
-.timeline-dot.open{background:var(--warning);border-color:var(--warning)}
-.timeline-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
-.timeline-title{font-weight:600;font-size:14px;color:var(--text)}
-.timeline-status{font-size:10px;padding:1px 7px;border-radius:8px;text-transform:uppercase;font-weight:600;letter-spacing:.3px}
-.timeline-status.open{background:var(--warning-bg);color:var(--warning)}
-.timeline-status.resolved{background:var(--success-bg);color:var(--success)}
-.timeline-status.closed{background:rgba(120,120,120,.1);color:var(--text-muted)}
-.timeline-status.in_progress{background:var(--info-bg);color:var(--info)}
-.timeline-date{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px}
-.timeline-desc{font-size:13px;color:var(--text-secondary);line-height:1.5;margin-bottom:4px}
-.timeline-resol{font-size:13px;color:var(--text-muted);padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid var(--success);margin-top:4px}
-.timeline-resol::before{content:'Resolução: ';font-weight:600;color:var(--text)}
-.timeline-empty{padding:20px;text-align:center;color:var(--text-muted);font-size:13px}
-
-/* Form */
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
-.form-group input,.form-group textarea,.form-group select{
-width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;
-padding:8px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color .15s;
-}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--red)}
-.form-group textarea{resize:vertical;min-height:60px}
-.form-group select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23787878' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
-.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-
-/* Modal tabs */
+.modal{background:var(--bg);border:1px solid var(--border);border-radius:10px;width:100%;max-width:780px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.15)}
+.modal-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-top h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.modal-top .m-badge{font-size:9px;padding:2px 8px;border-radius:8px;text-transform:uppercase;font-weight:700}
+.modal-close{background:none;border:none;color:var(--color-muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .15s}
+.modal-close:hover{background:var(--bg-alt);color:var(--color)}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
 .modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
-.modal-tab{
-padding:8px 16px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;
-border-bottom:2px solid transparent;transition:all .15s;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.3px;
-}
-.modal-tab:hover{color:var(--text)}
+.modal-tab{padding:6px 16px;font-size:12px;font-weight:600;color:var(--color-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.2px}
+.modal-tab:hover{color:var(--color)}
 .modal-tab.active{color:var(--red);border-bottom-color:var(--red)}
-.modal-tab-content{display:none}
-.modal-tab-content.active{display:block}
-
-/* Workflow detail mini chart */
-.mini-chart{height:40px;display:flex;align-items:flex-end;gap:2px;margin-top:8px}
-.mini-chart .bar{flex:1;border-radius:2px 2px 0 0;background:var(--red);min-height:4px;transition:height .3s}
-
-/* Responsive */
-@media(max-width:768px){
-.sidebar{display:none}
-.main{max-width:100%;padding:16px}
+.modal-tab-c{display:none}
+.modal-tab-c.active{display:block}
+.info-2col{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.info-cell{padding:5px 8px;background:var(--bg-alt);border-radius:4px}
+.info-cell .l{font-size:9px;color:var(--color-muted);text-transform:uppercase;letter-spacing:.2px}
+.info-cell .v{font-size:12px;font-weight:600;color:var(--color);margin-top:1px;font-family:'Barlow',sans-serif}
+/* Timeline */
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 14px 14px}
+.tl-item:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-20px;top:5px;width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:var(--bg);z-index:1}
+.tl-dot.resolved{background:var(--success);border-color:var(--success)}
+.tl-dot.closed{background:var(--color-muted);border-color:var(--color-muted)}
+.tl-dot.in_progress{background:var(--info);border-color:var(--info)}
+.tl-dot.open{background:var(--warning);border-color:var(--warning)}
+.tl-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.tl-title{font-weight:600;font-size:13px;color:var(--color)}
+.tl-badge{font-size:9px;padding:1px 6px;border-radius:6px;text-transform:uppercase;font-weight:600}
+.tl-badge.open{background:var(--warning-bg);color:var(--warning)}
+.tl-badge.resolved{background:var(--success-bg);color:var(--success)}
+.tl-badge.closed{background:var(--bg-alt);color:var(--color-muted)}
+.tl-badge.in_progress{background:var(--info-bg);color:var(--info)}
+.tl-date{font-size:10px;color:var(--color-muted);margin-bottom:3px}
+.tl-desc{font-size:12px;color:var(--color-secondary);line-height:1.5;margin-bottom:3px}
+.tl-resol{font-size:12px;color:var(--color-muted);padding:6px 10px;background:var(--bg-alt);border-radius:4px;border-left:3px solid var(--success);margin-top:3px}
+.tl-empty{padding:24px;text-align:center;color:var(--color-muted);font-size:13px}
+/* Form */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--color-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.2px}
+.fg input,.fg textarea,.fg select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--color);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--red)}
+.fg textarea{resize:vertical;min-height:54px}
+.fg select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%236B7280' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
+.fa{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+/* Skeleton */
+.skel{background:#E8EAED;border-radius:4px;animation:sh 1.4s infinite}
+@keyframes sh{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+@media(max-width:640px){
+.topbar{padding:6px 16px}
+.header{padding:12px 16px}
+.content{padding:16px}
 .kpis{grid-template-columns:repeat(2,1fr)}
 .wf-grid{grid-template-columns:1fr}
-.modal-body{grid-template-columns:1fr}
-.topbar-instance{display:none}
-}
-@media(max-width:480px){
-.kpis{grid-template-columns:1fr}
+.topbar-left span{display:none}
 }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="sidebar-logo">
-      <h1>N8<span style="color:var(--text)">C²</span></h1>
-      <span>Command Center</span>
+<!-- RED TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <img src="data:image/png;base64,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YYekYYekYYekYYekYYekYYekYYekNWyH2/ZtcNghadghadghadghadghadghadghadghadghaQ3b2X7f4JOTW9ghadghadghadghadghadghadghadghadghadghaQ3b+dTgc5Nj2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFpzdpRH5t7bnKN9Q5J4/voJK1hO1/80uCTk1sN20kO/7xp8unJoabtpHNw2fAMrE/nAa9U3j0ceplOaRabt0OTAt4Bcz/ApLGzRgW00+v6nyZ21qiAdp699j9N7KxR2CFp2CFp2CFp2CFp7GeRtIB2Qixl7KxR2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFp2CFpAe10e/6niZ01CjskDTskDTskDTskDTskDTskDTskDTskDTskje+jk7SAdg4u/U8TO2sUdkgadkgadkgadkgadkgadkgadkgadkgadkhaQDvH7/xPEztrFHZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIWkA7aifANLGzPgW0kwz8TxI7axR2SBp2SBp2SBp2SBp2SBp2SBp2SBp2SBp2SFpIOw/OvE8SO2sUdkgadkgadkgadkgadkgadkgadkgadkgadkhaSDtfvfU+SeysUSHt3L3xPknsrFEbZyfEHU5IFHZIGnZIGnZIGnZIGnZIGnZIGnZIGnZIWkg7z157nyR21qiQdu4NvU8SO2sU2yySFtLOo1Pvk8TOGnXta7tyOP7Fh73sP6OPO/5XO9hZp9RFvqjHizxJ/h7/1eC8+EV3jGB/DO1zd/L4sLM3HXZIGnZIGnZImgpyJ0mKIeyQNBXkTgMUQyrInQYohlSS7I6angnayFSQbwxSBCkV5BNWiqDj1E6vu/zfEU3XS+1wcJAkfU7tPP+r6bmgTeypCnM7QGp/F/pj+wCX16DWpz5qOwyWyb7+O22HwTLZdz3UdhjwkH1bp9lpigx4yLrzUWaHS3+Rbf13+enRnMJDtnXPilPr+SidLHv0srDDXjrZdfzD+Cs9bLTIruH15OtgT980Oyu0YaWbrLGdvetmZ4U2q95JMrGjBoyWybyn3ye3X2FmtEzmjbJvx4/t8E0bMm+YDXEml05gtEym5audWzvsppNp+WqndMkWVjxkVrHaKdlhxENmFaud8qWi/vlTM7NCm9V4tVO2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" alt="V4" class="v4-logo">
+    <span>N8N Command Center</span>
+  </div>
+  <div class="topbar-right">
+    <div class="conn">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusLabel">Conectando...</span>
     </div>
-    <ul class="sidebar-nav">
-      <li><a href="#" class="active" data-view="dashboard">📊 Dashboard</a></li>
-      <li><a href="#" data-view="workflows">⚡ Workflows</a></li>
-      <li><a href="#" data-view="history">📋 Histórico</a></li>
-      <li><a href="#" data-view="sdr">🤖 SDR IAs</a></li>
-    </ul>
-    <div style="padding:16px 20px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Servidor</div>
-      <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary)">n8n.fvmarketing.com.br</div>
-    </div>
-  </nav>
-
-  <!-- MAIN CONTENT -->
-  <div class="main">
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Dashboard</h2>
-        <span class="topbar-instance" id="instanceLabel">fvmarketing</span>
-      </div>
-      <div class="topbar-right">
-        <div class="connection">
-          <span class="dot pulse" id="statusDot"></span>
-          <span id="statusLabel">Conectado</span>
-        </div>
-        <span class="last-update" id="lastUpdate">—</span>
-        <button class="theme-toggle" id="themeToggle" title="Alternar tema">
-          <span class="thumb" id="themeThumb">🌙</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- KPIs -->
-    <div class="kpis" id="kpiRow">
-      <div class="kpi-card"><div class="kpi-glare blue"></div><div class="kpi-label">Workflows</div><div class="kpi-value" id="kpiTotal">—</div><div class="kpi-sub">Total registrados</div></div>
-      <div class="kpi-card"><div class="kpi-glare green"></div><div class="kpi-label">Sucesso (24h)</div><div class="kpi-value green" id="kpiSuccess">—</div><div class="kpi-sub"><span id="kpiSuccessRate">—</span> taxa de sucesso</div></div>
-      <div class="kpi-card"><div class="kpi-glare amber"></div><div class="kpi-label">Execuções (24h)</div><div class="kpi-value" id="kpiExecutions">—</div><div class="kpi-sub">Total de execuções</div></div>
-      <div class="kpi-card"><div class="kpi-glare red"></div><div class="kpi-label">Chamados Abertos</div><div class="kpi-value red" id="kpiReports">—</div><div class="kpi-sub"><span id="kpiReportsDetail">—</span></div></div>
-    </div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-box">
-          <span class="icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Buscar workflow..." oninput="filterWorkflows()">
-        </div>
-        <div id="filterBar">
-          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
-          <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Ativos</button>
-          <button class="filter-btn" data-filter="error" onclick="setFilter('error')">Erro</button>
-          <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Inativos</button>
-          <button class="filter-btn" data-filter="sdr" onclick="setFilter('sdr')">SDR</button>
-        </div>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn btn-primary btn-sm" onclick="openNewReport()">+ Novo Chamado</button>
-      </div>
-    </div>
-
-    <!-- WORKFLOW GRID -->
-    <div class="section-label">
-      <span>Workflows</span>
-      <span style="font-weight:400;font-size:12px;color:var(--text-muted)" id="wfCountLabel"></span>
-    </div>
-    <div class="wf-grid" id="wfGrid"></div>
-
-    <!-- RECENT ACTIVITY (small footer) -->
-    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-      <div class="section-label" style="margin-bottom:8px;font-size:13px">
-        <span>🔄 Atividade Recente</span>
-        <span style="font-weight:400;font-size:11px;color:var(--text-muted)" id="feedCount">—</span>
-      </div>
-      <div id="recentFeed" style="font-size:13px;color:var(--text-muted)"></div>
-    </div>
+    <button class="theme-btn" id="themeToggle">🌙 Dark</button>
   </div>
 </div>
 
-<!-- ===== MODAL ===== -->
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h2>Dashboard</h2>
+    <span class="instance">n8n.fvmarketing.com.br</span>
+  </div>
+  <div class="header-right">
+    <span class="last-upd" id="lastUpdate">—</span>
+    <button class="btn btn-primary btn-xs" onclick="openNewReport()">+ Chamado</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- KPIs -->
+  <div class="kpis" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Workflows</span></div><div class="kpi-value" id="kpiTotal">—</div><div class="kpi-sub">Total registrados</div></div>
+    <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Taxa de Sucesso</span><span class="kpi-badge green" id="kpiSuccessBadge">—</span></div><div class="kpi-value green" id="kpiSuccess">—</div><div class="kpi-sub"><span id="kpiSuccessNum">—</span> execuções OK (24h)</div></div>
+    <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Execuções 24h</span></div><div class="kpi-value" id="kpiExecutions">—</div><div class="kpi-sub">Total de execuções</div></div>
+    <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">Chamados Abertos</span><span class="kpi-badge red" id="kpiReportBadge">—</span></div><div class="kpi-value red" id="kpiReports">—</div><div class="kpi-sub"><span id="kpiReportsDetail">—</span></div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="ico">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar workflow..." oninput="filterWorkflows()">
+    </div>
+    <div id="filterBar">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+      <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Ativos</button>
+      <button class="filter-btn" data-filter="error" onclick="setFilter('error')">Erro</button>
+      <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Inativos</button>
+      <button class="filter-btn" data-filter="sdr" onclick="setFilter('sdr')">SDR</button>
+    </div>
+  </div>
+
+  <!-- Workflow Grid -->
+  <div class="section">
+    <div class="section-head">
+      <h3>Workflows</h3>
+      <span class="count" id="wfCountLabel"></span>
+    </div>
+    <div class="wf-grid" id="wfGrid"></div>
+  </div>
+
+  <!-- Activity Feed -->
+  <div class="section">
+    <div class="section-head">
+      <h3>Atividade Recente</h3>
+      <span class="count" id="feedCount">—</span>
+    </div>
+    <div class="feed" id="recentFeed"></div>
+  </div>
+
+</div>
+
+<!-- MODAL WORKFLOW -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <div class="modal-header">
+    <div class="modal-top">
       <h3 id="modalTitle">Workflow</h3>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-tabs">
-      <span class="modal-tab active" data-tab="overview" onclick="switchModalTab('overview')">Visão Geral</span>
-      <span class="modal-tab" data-tab="reports" onclick="switchModalTab('reports')">Histórico</span>
+      <span class="modal-tab active" data-tab="overview" onclick="switchTab('overview')">Visão Geral</span>
+      <span class="modal-tab" data-tab="reports" onclick="switchTab('reports')">Histórico</span>
     </div>
-    <div class="modal-body full" id="modalBody">
-      <!-- Tab: Overview -->
-      <div class="modal-tab-content active" id="tabOverview">
-        <div class="modal-section">
-          <div class="modal-section-title">Detalhes do Workflow</div>
-          <div class="info-grid" id="modalInfoGrid"></div>
-        </div>
-        <div class="modal-section" style="margin-top:16px">
-          <div class="modal-section-title">Tags</div>
-          <div id="modalTags" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-        </div>
-        <div style="margin-top:16px">
-          <button class="btn btn-primary btn-sm" onclick="openNewReport(currentWorkflowId)">+ Adicionar Chamado</button>
-        </div>
+    <div class="modal-body">
+      <div class="modal-tab-c active" id="tabOverview">
+        <div style="font-size:11px;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:.2px;margin-bottom:6px">Detalhes</div>
+        <div class="info-2col" id="modalInfo"></div>
+        <div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap" id="modalTags"></div>
+        <div style="margin-top:12px"><button class="btn btn-primary btn-xs" onclick="openNewReport(currentWf)">+ Adicionar Chamado</button></div>
       </div>
-      <!-- Tab: Reports History -->
-      <div class="modal-tab-content" id="tabReports">
-        <div class="modal-section">
-          <div class="modal-section-title" style="display:flex;justify-content:space-between;align-items:center">
-            <span>Histórico de Chamados</span>
-            <button class="btn btn-outline btn-xs" onclick="openNewReport(currentWorkflowId)">+ Novo</button>
-          </div>
-          <div class="timeline" id="modalTimeline">
-            <div class="timeline-empty">Nenhum chamado registrado para este workflow.</div>
-          </div>
+      <div class="modal-tab-c" id="tabReports">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:.2px">Histórico de Chamados</span>
+          <button class="btn btn-outline btn-xs" onclick="openNewReport(currentWf)">+ Novo</button>
         </div>
+        <div class="timeline" id="modalTimeline"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== NEW REPORT MODAL ===== -->
-<div class="modal-overlay" id="reportModalOverlay">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
+<!-- MODAL NEW REPORT -->
+<div class="modal-overlay" id="reportOverlay">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-top">
       <h3>Novo Chamado</h3>
-      <button class="modal-close" onclick="closeReportModal()">✕</button>
+      <button class="modal-close" onclick="closeReport()">✕</button>
     </div>
-    <div class="modal-body full">
+    <div class="modal-body">
       <form id="reportForm" onsubmit="submitReport(event)">
-        <div class="form-group">
-          <label>Workflow</label>
-          <select id="reportWorkflow" required></select>
-        </div>
-        <div class="form-group">
-          <label>Título</label>
-          <input type="text" id="reportTitle" placeholder="Ex: Erro na conexão com a API do Meta" required>
-        </div>
-        <div class="form-group">
-          <label>Descrição</label>
-          <textarea id="reportDesc" placeholder="Descreva o problema ou atividade realizada..." rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="reportStatus">
-            <option value="open">Aberto</option>
-            <option value="in_progress">Em Andamento</option>
-            <option value="resolved">Resolvido</option>
-            <option value="closed">Fechado</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Resolução</label>
-          <textarea id="reportResolution" placeholder="O que foi feito para resolver? (opcional se ainda aberto)" rows="2"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-outline btn-sm" onclick="closeReportModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary btn-sm">Salvar Chamado</button>
-        </div>
+        <div class="fg"><label>Workflow</label><select id="repWf" required></select></div>
+        <div class="fg"><label>Título</label><input type="text" id="repTitle" placeholder="Ex: Erro na API do Meta" required></div>
+        <div class="fg"><label>Descrição</label><textarea id="repDesc" placeholder="Descreva o problema..." rows="2"></textarea></div>
+        <div class="fg"><label>Status</label><select id="repStatus"><option value="open">Aberto</option><option value="in_progress">Em Andamento</option><option value="resolved">Resolvido</option><option value="closed">Fechado</option></select></div>
+        <div class="fg"><label>Resolução</label><textarea id="repResol" placeholder="O que foi feito?" rows="2"></textarea></div>
+        <div class="fa"><button type="button" class="btn btn-outline btn-xs" onclick="closeReport()">Cancelar</button><button type="submit" class="btn btn-primary btn-xs">Salvar</button></div>
       </form>
     </div>
   </div>
 </div>
 
 <script>
-// ============================================================
-// CONFIG
-// ============================================================
 const SUPABASE_URL = 'https://gswzuzetverulcgzhynb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd3p1emV0dmVydWxjZ3poeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjU5NzgsImV4cCI6MjA3NTUwMTk3OH0.GMNBzrfT78G5l7xk8QtAkeHlQJwWaZ4edKSEHMN560c';
-const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  realtime: { heartbeatIntervalMs: 15000 }
-});
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd3p1emV0dmVydWxjZ3poeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjU5NzgsImV4cCI6MjA3NTUwMTk3OH0.GMNBzrfT78G5l7xk8QtAkeHlQJwWaZ4edKSEHMN560c';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { realtime: { heartbeatIntervalMs: 15000 } });
 
-// ============================================================
-// STATE
-// ============================================================
-let workflows = [];
-let reports = [];
-let heartbeat = null;
-let currentFilter = 'all';
-let currentWorkflowId = null;
+let workflows = [], reports = [], heartbeat = null, filter = 'all', currentWf = null;
 
-// ============================================================
-// THEME
-// ============================================================
+// Theme
 function applyTheme(t) {
-  document.documentElement.classList.toggle('theme-light', t === 'light');
+  document.documentElement.classList.toggle('theme-dark', t === 'dark');
   localStorage.setItem('n8n-theme', t);
-  const el = document.getElementById('themeThumb');
-  if (el) el.textContent = t === 'light' ? '☀️' : '🌙';
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
 }
 function toggleTheme() {
-  applyTheme(document.documentElement.classList.contains('theme-light') ? 'dark' : 'light');
+  const isDark = document.documentElement.classList.contains('theme-dark');
+  applyTheme(isDark ? 'light' : 'dark');
 }
 
-// ============================================================
-// DATA FETCH
-// ============================================================
+// Invert colors for dark mode
+const darkStyle = document.createElement('style');
+darkStyle.textContent = `.theme-dark body{--color:#E8E8E8;--color-secondary:#C8C8C8;--color-muted:#787878;--bg:#0E0E0E;--bg-alt:#0A0A0A;--bg-card:#141414;--border:#252525;--border-light:#383838;--shadow:0 2px 8px rgba(0,0,0,.3);--shadow-hover:0 8px 24px rgba(0,0,0,.5);--success-bg:rgba(22,163,74,.12);--error-bg:rgba(220,38,38,.12);--warning-bg:rgba(217,119,6,.12);--info-bg:rgba(37,99,235,.12)}`;
+document.head.appendChild(darkStyle);
+
+// Fetch
 async function fetchAll() {
   try {
-    const [wfRes, rpRes, hbRes] = await Promise.all([
+    const [wf, rp, hb] = await Promise.all([
       supabase.from('n8n_workflows').select('*').order('name'),
       supabase.from('workflow_reports').select('*').order('created_at', { ascending: false }),
       supabase.from('n8n_heartbeat').select('*').order('checked_at', { ascending: false }).limit(1)
     ]);
-    if (wfRes.error) throw wfRes.error;
-    workflows = wfRes.data || [];
-    reports = rpRes.data || [];
-    heartbeat = hbRes.data?.[0] || null;
-  } catch (err) {
-    console.error('Fetch error:', err);
-  }
+    if (wf.error) throw wf.error;
+    workflows = wf.data || [];
+    reports = rp.data || [];
+    heartbeat = hb.data?.[0] || null;
+  } catch (e) { console.error('Fetch:', e); }
 }
 
-// ============================================================
-// RENDER
-// ============================================================
-function renderDashboard() {
+// Render
+function render() {
   const total = workflows.length;
   const active = workflows.filter(w => w.active).length;
   const exec24 = workflows.reduce((s, w) => s + (w.executions_24h || 0), 0);
   const succ24 = workflows.reduce((s, w) => s + (w.success_24h || 0), 0);
-  const err24 = workflows.reduce((s, w) => s + (w.error_24h || 0), 0);
-  const rate = exec24 > 0 ? ((succ24 / exec24) * 100).toFixed(1) + '%' : '—';
-
-  const openReports = reports.filter(r => r.status === 'open' || r.status === 'in_progress').length;
-  const totalReports = reports.length;
+  const rate = exec24 > 0 ? ((succ24 / exec24) * 100).toFixed(1) : 0;
+  const openReps = reports.filter(r => r.status === 'open' || r.status === 'in_progress').length;
 
   document.getElementById('kpiTotal').textContent = total;
-  document.getElementById('kpiSuccess').textContent = succ24;
-  document.getElementById('kpiSuccessRate').textContent = rate;
+  document.getElementById('kpiSuccess').textContent = rate + '%';
+  document.getElementById('kpiSuccessBadge').textContent = rate >= 80 ? 'Saudável' : rate >= 50 ? 'Atenção' : 'Crítico';
+  document.getElementById('kpiSuccessNum').textContent = succ24;
   document.getElementById('kpiExecutions').textContent = exec24;
-  document.getElementById('kpiReports').textContent = openReports;
-  document.getElementById('kpiReportsDetail').textContent = `${totalReports} total · ${openReports} abertos`;
+  document.getElementById('kpiReports').textContent = openReps;
+  document.getElementById('kpiReportsDetail').textContent = reports.length + ' total · ' + openReps + ' abertos';
+  document.getElementById('kpiReportBadge').textContent = openReps > 0 ? openReps + ' pendentes' : 'Zero';
 
-  // Connection status
   if (heartbeat) {
     const dot = document.getElementById('statusDot');
     const lbl = document.getElementById('statusLabel');
-    if (heartbeat.is_alive) {
-      dot.className = 'dot pulse';
-      lbl.textContent = 'Conectado';
-    } else {
-      dot.className = 'dot error pulse';
-      lbl.textContent = 'Desconectado';
-    }
+    dot.style.background = heartbeat.is_alive ? '#22C55E' : '#DC2626';
+    lbl.textContent = heartbeat.is_alive ? 'Conectado' : 'Desconectado';
   }
-  document.getElementById('lastUpdate').textContent = `updated ${new Date().toLocaleTimeString('pt-BR')}`;
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
 
-  renderWorkflowGrid();
-  renderRecentFeed();
+  renderGrid();
+  renderFeed();
 }
 
-function renderWorkflowGrid() {
+function renderGrid() {
   const grid = document.getElementById('wfGrid');
-  const query = (document.getElementById('searchInput').value || '').toLowerCase();
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  let f = workflows;
+  if (q) f = f.filter(w => w.name.toLowerCase().includes(q));
+  if (filter === 'active') f = f.filter(w => w.active);
+  else if (filter === 'inactive') f = f.filter(w => !w.active);
+  else if (filter === 'error') f = f.filter(w => w.last_execution_status === 'error' || w.status === 'error');
+  else if (filter === 'sdr') f = f.filter(w => w.name.toUpperCase().includes('SDR'));
 
-  let filtered = workflows;
+  document.getElementById('wfCountLabel').textContent = f.length + ' de ' + workflows.length;
 
-  // Search filter
-  if (query) {
-    filtered = filtered.filter(w => w.name.toLowerCase().includes(query));
-  }
-
-  // Status filter
-  if (currentFilter === 'active') filtered = filtered.filter(w => w.active);
-  else if (currentFilter === 'inactive') filtered = filtered.filter(w => !w.active);
-  else if (currentFilter === 'error') filtered = filtered.filter(w => w.last_execution_status === 'error' || w.status === 'error');
-  else if (currentFilter === 'sdr') filtered = filtered.filter(w => w.name.toUpperCase().includes('SDR'));
-
-  document.getElementById('wfCountLabel').textContent = `${filtered.length} de ${workflows.length} workflows`;
-
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state"><strong>Nenhum workflow encontrado</strong>${query ? ' Tente outro termo de busca.' : ''}</div>`;
+  if (!f.length) {
+    grid.innerHTML = '<div class="empty"><strong>Nenhum workflow encontrado</strong></div>';
     return;
   }
 
-  // Report counts lookup
-  const reportCounts = {};
-  const reportOpen = {};
+  const rc = {}; const ro = {};
   reports.forEach(r => {
-    if (!reportCounts[r.workflow_id]) reportCounts[r.workflow_id] = 0;
-    if (!reportOpen[r.workflow_id]) reportOpen[r.workflow_id] = 0;
-    reportCounts[r.workflow_id]++;
-    if (r.status === 'open' || r.status === 'in_progress') reportOpen[r.workflow_id]++;
+    rc[r.workflow_id] = (rc[r.workflow_id] || 0) + 1;
+    if (r.status === 'open' || r.status === 'in_progress') ro[r.workflow_id] = (ro[r.workflow_id] || 0) + 1;
   });
 
-  grid.innerHTML = filtered.map(w => {
-    const status = !w.active ? 'inactive' : (w.last_execution_status === 'error' || w.status === 'error' ? 'error' : 'active');
-    const rc = reportCounts[w.n8n_id] || 0;
-    const ro = reportOpen[w.n8n_id] || 0;
-    const execPct = (w.executions_24h || 0) > 0 ? ((w.success_24h || 0) / w.executions_24h * 100).toFixed(0) : 0;
-
+  grid.innerHTML = f.map(w => {
+    const s = !w.active ? 'inactive' : (w.last_execution_status === 'error' || w.status === 'error' ? 'error' : 'active');
+    const pct = (w.executions_24h || 0) > 0 ? ((w.success_24h || 0) / w.executions_24h * 100) : 0;
+    const barColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
     return `<div class="wf-card" onclick="openModal('${w.n8n_id}')">
-      <div class="wf-top">
-        <div class="wf-name">${w.name}</div>
-        <span class="wf-badge ${status}">${status}</span>
-      </div>
-      <div class="wf-meta">
-        <span>⚡ ${w.executions_24h || 0} exec</span>
-        <span>✅ ${w.success_24h || 0} ok</span>
-        <span>❌ ${w.error_24h || 0} err</span>
-      </div>
-      ${execPct > 0 ? `<div class="stat-bar"><div class="stat-bar-fill" style="width:${execPct}%;background:${execPct > 80 ? 'var(--success)' : execPct > 50 ? 'var(--warning)' : 'var(--error)'}"></div></div>` : ''}
-      <div class="wf-footer">
-        <div class="wf-reports">📋 <strong>${rc}</strong> chamados${ro > 0 ? ` · <span style="color:var(--warning)">${ro} abertos</span>` : ''}</div>
-        <div class="wf-last">${w.last_executed_at ? new Date(w.last_executed_at).toLocaleString('pt-BR') : 'nunca'}</div>
-      </div>
+      <div class="wf-row1"><div class="wf-name">${w.name}</div><span class="wf-badge ${s}">${s}</span></div>
+      <div class="wf-row2"><span>⚡ ${w.executions_24h||0}</span><span>✅ ${w.success_24h||0}</span><span>❌ ${w.error_24h||0}</span></div>
+      ${pct > 0 ? `<div class="wf-bar"><div class="wf-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>` : ''}
+      <div class="wf-row3"><div class="wf-reps">📋 <strong>${rc[w.n8n_id]||0}</strong> chamados${ro[w.n8n_id] ? ` · <span style="color:var(--warning)">${ro[w.n8n_id]} abertos</span>` : ''}</div><div class="wf-time">${w.last_executed_at ? new Date(w.last_executed_at).toLocaleString('pt-BR') : 'nunca'}</div></div>
     </div>`;
   }).join('');
 }
 
-function renderRecentFeed() {
+function renderFeed() {
   const el = document.getElementById('recentFeed');
-  const recent = [...reports].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
-  document.getElementById('feedCount').textContent = `${recent.length} eventos`;
-
-  if (!recent.length) {
-    el.innerHTML = '<span style="color:var(--text-muted)">Nenhuma atividade recente.</span>';
-    return;
-  }
-
-  el.innerHTML = recent.map(r => {
-    const label = { open: '🟡 Aberto', in_progress: '🔵 Em Andamento', resolved: '🟢 Resolvido', closed: '⚪ Fechado' }[r.status] || r.status;
-    return `<div style="padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline">
-      <span style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;flex-shrink:0">${new Date(r.created_at).toLocaleString('pt-BR')}</span>
-      <span style="font-size:12px;font-weight:600;flex-shrink:0">${r.workflow_name || '—'}</span>
-      <span style="flex:1">${r.title}</span>
-      <span style="font-size:11px">${label}</span>
-    </div>`;
-  }).join('');
+  const r = [...reports].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
+  document.getElementById('feedCount').textContent = r.length + ' eventos';
+  if (!r.length) { el.innerHTML = '<div style="padding:12px;text-align:center;color:var(--color-muted);font-size:13px">Nenhuma atividade registrada.</div>'; return; }
+  el.innerHTML = r.map(i => `<div class="feed-item"><span class="feed-time">${new Date(i.created_at).toLocaleString('pt-BR')}</span><span class="feed-wf">${i.workflow_name||'—'}</span><span class="feed-title">${i.title}</span><span class="feed-status ${i.status}">${i.status}</span></div>`).join('');
 }
 
-// ============================================================
-// FILTER
-// ============================================================
 function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === f);
-  });
-  renderWorkflowGrid();
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderGrid();
 }
-function filterWorkflows() { renderWorkflowGrid(); }
+function filterWorkflows() { renderGrid(); }
 
-// ============================================================
-// MODAL
-// ============================================================
-function openModal(wfId) {
-  currentWorkflowId = wfId;
-  const wf = workflows.find(w => w.n8n_id === wfId);
-  if (!wf) return;
-
-  document.getElementById('modalTitle').innerHTML = `${wf.name} <span class="modal-badge ${!wf.active ? 'inactive' : (wf.last_execution_status === 'error' ? 'error' : 'active')}" style="font-size:10px;margin-left:8px">${!wf.active ? 'Inativo' : (wf.last_execution_status === 'error' ? 'Erro' : 'Ativo')}</span>`;
-
-  // Info grid
-  const execPct = wf.executions_24h > 0 ? ((wf.success_24h / wf.executions_24h) * 100).toFixed(1) + '%' : '—';
-  document.getElementById('modalInfoGrid').innerHTML = `
-    <div class="info-item"><div class="label">N8N ID</div><div class="value" style="font-size:11px">${wf.n8n_id}</div></div>
-    <div class="info-item"><div class="label">Status</div><div class="value">${wf.active ? 'Ativo' : 'Inativo'}</div></div>
-    <div class="info-item"><div class="label">Última Execução</div><div class="value" style="font-size:12px">${wf.last_executed_at ? new Date(wf.last_executed_at).toLocaleString('pt-BR') : 'Nunca'}</div></div>
-    <div class="info-item"><div class="label">Status da Última Exec</div><div class="value">${wf.last_execution_status || '—'}</div></div>
-    <div class="info-item"><div class="label">Execuções (24h)</div><div class="value">${wf.executions_24h || 0}</div></div>
-    <div class="info-item"><div class="label">Taxa de Sucesso</div><div class="value">${execPct}</div></div>
-  `;
-
-  // Tags
-  const tagsEl = document.getElementById('modalTags');
-  if (wf.tags && wf.tags.length) {
-    tagsEl.innerHTML = wf.tags.map(t => `<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--bg-card);border:1px solid var(--border)">${t}</span>`).join('');
-  } else {
-    tagsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Sem tags</span>';
+// Modal
+function openModal(id) {
+  currentWf = id;
+  const w = workflows.find(x => x.n8n_id === id);
+  if (!w) return;
+  const s = !w.active ? 'inactive' : (w.last_execution_status === 'error' ? 'error' : 'active');
+  document.getElementById('modalTitle').textContent = w.name;
+  const execPct = w.executions_24h > 0 ? ((w.success_24h / w.executions_24h) * 100).toFixed(1) + '%' : '—';
+  document.getElementById('modalInfo').innerHTML = `
+    <div class="info-cell"><div class="l">N8N ID</div><div class="v" style="font-size:11px">${w.n8n_id}</div></div>
+    <div class="info-cell"><div class="l">Status</div><div class="v">${s}</div></div>
+    <div class="info-cell"><div class="l">Execuções 24h</div><div class="v">${w.executions_24h||0}</div></div>
+    <div class="info-cell"><div class="l">Taxa de Sucesso</div><div class="v">${execPct}</div></div>
+    <div class="info-cell"><div class="l">Última Execução</div><div class="v" style="font-size:12px">${w.last_executed_at ? new Date(w.last_executed_at).toLocaleString('pt-BR') : 'Nunca'}</div></div>
+    <div class="info-cell"><div class="l">Status Exec</div><div class="v">${w.last_execution_status||'—'}</div></div>`;
+  document.getElementById('modalTags').innerHTML = (w.tags && w.tags.length) ? w.tags.map(t => `<span style="font-size:11px;padding:2px 7px;border-radius:3px;background:var(--bg-alt);border:1px solid var(--border)">${t}</span>`).join('') : '<span style="font-size:12px;color:var(--color-muted)">Sem tags</span>';
+  const tl = document.getElementById('modalTimeline');
+  const wfReps = reports.filter(r => r.workflow_id === id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!wfReps.length) { tl.innerHTML = '<div class="tl-empty">Nenhum chamado registrado.</div>'; }
+  else {
+    tl.innerHTML = wfReps.map(r => `<div class="tl-item"><div class="tl-dot ${r.status}"></div><div class="tl-row1"><span class="tl-title">${r.title}</span><span class="tl-badge ${r.status}">${r.status.replace('_',' ')}</span></div><div class="tl-date">${new Date(r.created_at).toLocaleString('pt-BR')}</div>${r.description ? `<div class="tl-desc">${r.description}</div>` : ''}${r.resolution ? `<div class="tl-resol">${r.resolution}</div>` : ''}</div>`).join('');
   }
-
-  // Timeline
-  renderTimeline(wfId);
-
-  // Reset to first tab
-  switchModalTab('overview');
+  switchTab('overview');
   document.getElementById('modalOverlay').classList.add('open');
 }
-
-function renderTimeline(wfId) {
-  const el = document.getElementById('modalTimeline');
-  const wfReports = reports.filter(r => r.workflow_id === wfId).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-  if (!wfReports.length) {
-    el.innerHTML = `<div class="timeline-empty">Nenhum chamado registrado para este workflow. Clique em "+ Novo" para adicionar.</div>`;
-    return;
-  }
-
-  el.innerHTML = wfReports.map(r => {
-    const statusLabels = { open: 'Aberto', in_progress: 'Em Andamento', resolved: 'Resolvido', closed: 'Fechado' };
-    return `<div class="timeline-item">
-      <div class="timeline-dot ${r.status}"></div>
-      <div class="timeline-head">
-        <span class="timeline-title">${r.title}</span>
-        <span class="timeline-status ${r.status}">${statusLabels[r.status] || r.status}</span>
-      </div>
-      <div class="timeline-date">${new Date(r.created_at).toLocaleString('pt-BR')}</div>
-      ${r.description ? `<div class="timeline-desc">${r.description}</div>` : ''}
-      ${r.resolution ? `<div class="timeline-resol">${r.resolution}</div>` : ''}
-    </div>`;
-  }).join('');
+function switchTab(t) {
+  document.querySelectorAll('.modal-tab').forEach(x => x.classList.toggle('active', x.dataset.tab === t));
+  document.querySelectorAll('.modal-tab-c').forEach(x => x.classList.toggle('active', x.id === 'tab' + t.charAt(0).toUpperCase() + t.slice(1)));
 }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); currentWf = null; }
 
-function switchModalTab(tab) {
-  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  document.querySelectorAll('.modal-tab-content').forEach(c => c.classList.toggle('active', c.id === `tab${tab.charAt(0).toUpperCase()}${tab.slice(1)}`));
+// New Report
+function openNewReport(wfId) {
+  const sel = document.getElementById('repWf');
+  sel.innerHTML = workflows.map(w => `<option value="${w.n8n_id}" ${w.n8n_id === wfId ? 'selected' : ''}>${w.name}</option>`).join('');
+  document.getElementById('repTitle').value = '';
+  document.getElementById('repDesc').value = '';
+  document.getElementById('repStatus').value = 'open';
+  document.getElementById('repResol').value = '';
+  document.getElementById('reportOverlay').classList.add('open');
 }
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  currentWorkflowId = null;
-}
-
-// ============================================================
-// NEW REPORT FORM
-// ============================================================
-function openNewReport(preSelectedWfId) {
-  const select = document.getElementById('reportWorkflow');
-  select.innerHTML = workflows.map(w =>
-    `<option value="${w.n8n_id}" ${w.n8n_id === preSelectedWfId ? 'selected' : ''}>${w.name}</option>`
-  ).join('');
-
-  document.getElementById('reportTitle').value = '';
-  document.getElementById('reportDesc').value = '';
-  document.getElementById('reportStatus').value = 'open';
-  document.getElementById('reportResolution').value = '';
-
-  document.getElementById('reportModalOverlay').classList.add('open');
-
-  // If pre-selected, scroll to it
-  if (preSelectedWfId) {
-    select.value = preSelectedWfId;
-  }
-}
-
-function closeReportModal() {
-  document.getElementById('reportModalOverlay').classList.remove('open');
-}
-
+function closeReport() { document.getElementById('reportOverlay').classList.remove('open'); }
 async function submitReport(e) {
   e.preventDefault();
-  const wfId = document.getElementById('reportWorkflow').value;
+  const wfId = document.getElementById('repWf').value;
   const wf = workflows.find(w => w.n8n_id === wfId);
-
   const payload = {
     workflow_id: wfId,
     workflow_name: wf ? wf.name : wfId,
-    title: document.getElementById('reportTitle').value.trim(),
-    description: document.getElementById('reportDesc').value.trim() || null,
-    status: document.getElementById('reportStatus').value,
-    resolution: document.getElementById('reportResolution').value.trim() || null,
+    title: document.getElementById('repTitle').value.trim(),
+    description: document.getElementById('repDesc').value.trim() || null,
+    status: document.getElementById('repStatus').value,
+    resolution: document.getElementById('repResol').value.trim() || null,
     created_by: 'user'
   };
-
-  try {
-    const { error } = await supabase.from('workflow_reports').insert(payload);
-    if (error) throw error;
-
-    closeReportModal();
-    await fetchAll();
-    renderDashboard();
-
-    // If modal was open, refresh timeline
-    if (currentWorkflowId) renderTimeline(currentWorkflowId);
-  } catch (err) {
-    alert('Erro ao salvar chamado: ' + err.message);
-  }
+  const { error } = await supabase.from('workflow_reports').insert(payload);
+  if (error) { alert('Erro: ' + error.message); return; }
+  closeReport();
+  await fetchAll(); render();
+  if (currentWf) { const w = workflows.find(x => x.n8n_id === currentWf); if (w) openModal(currentWf); }
 }
 
-// ============================================================
-// REALTIME
-// ============================================================
+// Realtime + Refresh (30 min)
 function subscribe() {
-  const channel = supabase.channel('n8n-live');
-
-  channel
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_workflows' }, async () => {
-      await fetchAll(); renderDashboard();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'workflow_reports' }, async () => {
-      await fetchAll(); renderDashboard();
-      if (currentWorkflowId) renderTimeline(currentWorkflowId);
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_heartbeat' }, async () => {
-      await fetchAll(); renderDashboard();
-    })
+  const ch = supabase.channel('n8n-live');
+  ch.on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_workflows' }, async () => { await fetchAll(); render(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'workflow_reports' }, async () => { await fetchAll(); render(); if (currentWf) render(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'n8n_heartbeat' }, async () => { await fetchAll(); render(); })
     .subscribe();
-
-  // Fallback every 30s
-  setInterval(async () => {
-    await fetchAll(); renderDashboard();
-    if (currentWorkflowId) renderTimeline(currentWorkflowId);
-  }, 30000);
+  setInterval(async () => { await fetchAll(); render(); }, 1800000);
 }
 
-// ============================================================
-// INIT
-// ============================================================
-async function init() {
-  applyTheme(localStorage.getItem('n8n-theme') || 'dark');
+// Init
+document.addEventListener('DOMContentLoaded', async () => {
+  applyTheme(localStorage.getItem('n8n-theme') || 'light');
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-  await fetchAll();
-  renderDashboard();
-  subscribe();
-
-  // Modal close on overlay click
-  document.getElementById('modalOverlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-  document.getElementById('reportModalOverlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeReportModal();
-  });
-}
-
-document.addEventListener('DOMContentLoaded', init);
+  await fetchAll(); render(); subscribe();
+  document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+  document.getElementById('reportOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeReport(); });
+});
 </script>
 </body>
 </html>
